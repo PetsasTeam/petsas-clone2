@@ -1,0 +1,180 @@
+---
+description: Apply these rules when creating the project
+globs:
+alwaysApply: true
+---
+## Project Overview
+
+*   **Type:** Car Rental Website Application (React Frontend & Node.js Backend)
+*   **Description:** Build a car rental website for the Cyprus market similar to petsas.com.cy, hertz.com.cy, and europcar.com.cy.
+*   **Primary Goal:** Provide an end-to-end booking experience with real-time availability, secure JCC payment integration, multi-language support, and user/admin portals.
+
+## Project Structure
+
+### Framework-Specific Routing
+
+*   **Directory Rules:**
+    *   Next.js 14 (App Router): `app/[route]/page.tsx` conventions
+    *   Next.js (Pages Router): `pages/[route].tsx` pattern
+    *   React Router 6: `src/routes/` with `createBrowserRouter`
+
+### Core Directories
+
+*   **Versioned Structure:**
+    *   src/components: Reusable React 18 functional components
+    *   src/views (or src/pages): Page-level React components
+    *   src/routes: React Router 6 route definitions
+    *   src/hooks: Custom React Hooks (useAvailability, useAuth)
+    *   src/i18n: i18next configuration and translation files
+    *   src/styles: CSS Modules or styled-components files
+    *   src/assets: Static assets and images
+    *   backend/src/controllers: Express 4.18 controllers
+    *   backend/src/routes: Express route definitions
+    *   backend/src/models: PostgreSQL schemas/models
+    *   backend/src/middlewares: JWT authentication and validation middlewares
+    *   backend/src/services: Business logic and integrations (JCC, AWS SES)
+    *   backend/src/config: Environment-specific configs
+    *   backend/src/utils: Utility functions
+
+### Key Files
+
+*   **Stack-Versioned Patterns:**
+    *   src/index.tsx: React 18 entry point with `createRoot`
+    *   src/App.tsx: Main App component with RouterProvider
+    *   src/routes/index.tsx: React Router 6 `createBrowserRouter` definitions
+    *   src/i18n/config.ts: i18next initialization with English/Russian namespaces
+    *   backend/src/server.ts: Express.js 4.18 server initialization
+    *   backend/src/routes/auth.ts: JWT-based auth routes
+    *   backend/src/routes/bookings.ts: Booking APIs with availability logic
+    *   backend/src/routes/payments.ts: JCC Payment API integration routes
+
+## Tech Stack Rules
+
+*   **Version Enforcement:**
+    *   React@18: Use `createRoot` from `react-dom/client`; avoid deprecated APIs
+    *   React Router@6: Use `createBrowserRouter`/`RouterProvider`; remove `<Switch>`
+    *   Node.js@18: Enable ES Modules (`"type": "module"`); use top-level `await`
+    *   Express@4.18: Use built-in `express.json()`; avoid `body-parser`
+    *   PostgreSQL@14+: Enforce connection pooling; use parameterized queries
+    *   AWS SDK@3: Modular imports (`@aws-sdk/client-s3`)
+    *   i18next@21+: Use functional translations (`useTranslation` hook)
+    *   JWT@8+: Sign tokens with RS256; store secrets in env vars
+    *   JCC Payment API vX: Follow JCC sandbox configs and secure callbacks
+
+## PRD Compliance
+
+*   **Non-Negotiable:**
+    *   "JCC Payment gateway must support both upfront and on-arrival workflows.": Uphold dual-discount logic (15% online, 10% on-arrival).
+    *   "Performance: Page load ≤ 3 seconds.": Lazy-load images, code-splitting.
+    *   "GDPR-friendly.": Explicit cookie consent; data erasure endpoints.
+    *   "No integration with external fleet management systems – the website handles all vehicle data.": Maintain internal inventory modules.
+
+## App Flow Integration
+
+*   **Stack-Aligned Flow:**
+    *   Booking Flow → `/booking` route uses `BookingPage.tsx` in `src/views` with React DatePicker and real-time availability via REST API.
+    *   Payment Flow → `/checkout` route uses `CheckoutPage.tsx`; calls backend `payments` Express route integrating JCC SDK.
+    *   Auth Flow → `/login` and `/register` in `src/routes` with JWT-based Express APIs and `useAuth` hook.
+
+## Best Practices
+
+*   React (v18)
+    *   Use functional components and hooks exclusively.
+    *   Leverage React Query or SWR for data fetching and caching.
+    *   Apply code-splitting with `React.lazy` and `Suspense`.
+
+*   React Router (v6)
+    *   Centralize route definitions in `src/routes/index.tsx`.
+    *   Use `loader` and `action` for data loading and form submissions.
+    *   Guard private routes with wrapper components.
+
+*   React DatePicker
+    *   Use controlled components for date selection.
+    *   Validate date ranges on both client and server.
+    *   Customize locale in i18next for consistent formats.
+
+*   i18next
+    *   Structure translations in namespaces per feature.
+    *   Use `useTranslation` hook and `Trans` component for interpolation.
+    *   Lazy-load language resources.
+
+*   CSS Modules / styled-components
+    *   Scope styles per component.
+    *   Use theme providers for color palettes.
+    *   Avoid global style overrides.
+
+*   Node.js (v18)
+    *   Use ES Modules; prefer `import` over `require`.
+    *   Handle async errors with global handlers.
+    *   Keep environment variables secure.
+
+*   Express.js (v4.18)
+    *   Implement centralized error-handling middleware.
+    *   Validate request bodies with `Joi` or `zod`.
+    *   Log requests with structured logging (e.g., Winston).
+
+*   PostgreSQL
+    *   Use migrations (e.g., `Knex` or `TypeORM`).
+    *   Optimize queries with indexes and EXPLAIN.
+    *   Wrap queries in transactions for booking workflows.
+
+*   JWT
+    *   Set short-lived access tokens and refresh tokens.
+    *   Store tokens securely (httpOnly cookies or secure storage).
+    *   Rotate and invalidate tokens on logout.
+
+*   AWS S3
+    *   Use pre-signed URLs for uploads/downloads.
+    *   Restrict bucket policies for least privilege.
+    *   Enable versioning on buckets.
+
+*   AWS EC2 / ECS
+    *   Use autoscaling groups or Fargate tasks.
+    *   Separate environments (dev, staging, prod) in different clusters.
+    *   Monitor health with CloudWatch.
+
+*   AWS RDS (PostgreSQL)
+    *   Enable automated backups and Multi-AZ.
+    *   Restrict inbound access by security groups.
+    *   Use parameter groups for performance tuning.
+
+*   AWS SES
+    *   Verify sending domains and emails.
+    *   Use templates for transactional emails.
+    *   Monitor bounces and complaints.
+
+*   JCC Payment API
+    *   Secure callback endpoints with HMAC validation.
+    *   Test in sandbox before production.
+    *   Log transactions and handle failure retries.
+
+## Rules
+
+*   Derive folder/file patterns directly from `techStackDoc` versions.
+*   If Next.js 14 App Router: Enforce `app/` directory with nested route folders.
+*   If Pages Router: Use `pages/*.tsx` flat structure.
+*   Mirror this logic for React Router, SvelteKit, etc.
+*   Never mix version patterns (e.g., no `pages/` in App Router projects).
+
+## Rules Metrics
+
+Add the following instruction for analyzing rules usage:
+
+Before starting the project development, create a metrics file in the root of the project called
+
+`cursor_metrics.md`.
+
+### Instructions:
+
+*   Each time a cursor rule is used as context, update `cursor_metrics.md`.
+*   Use the following format for `cursor_metrics.md:`
+
+# Rules Metrics
+
+## Usage
+
+The number of times rules is used as context
+
+*   rule-name.mdc: 5
+*   another-rule.mdc: 2
+*   ...other rules

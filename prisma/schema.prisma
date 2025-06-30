@@ -1,0 +1,213 @@
+generator client {
+  provider      = "prisma-client-js"
+  output        = "../app/generated/prisma"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model VehicleCategory {
+  id               String            @id @default(cuid())
+  name             String            @unique
+  displayOrder     Int               @default(0)
+  visible          Boolean           @default(true)
+  seasonalPricings SeasonalPricing[]
+  vehicles         Vehicle[]
+}
+
+model Vehicle {
+  id            String          @id @default(cuid())
+  group         String
+  code          String          @unique
+  name          String
+  image         String
+  engineSize    String
+  doors         Int
+  seats         Int
+  adults        Int?
+  children      Int?
+  transmission  String
+  bigLuggages   Int
+  smallLuggages Int
+  hasAC         Boolean
+  categoryId    String
+  visible       Boolean         @default(true)
+  bookings      Booking[]
+  category      VehicleCategory @relation(fields: [categoryId], references: [id])
+}
+
+model Season {
+  id               String            @id @default(cuid())
+  name             String            @unique
+  startDate        DateTime
+  endDate          DateTime
+  type             String?
+  seasonalPricings SeasonalPricing[]
+}
+
+model SeasonalPricing {
+  id              String          @id @default(cuid())
+  categoryId      String
+  seasonId        String
+  group           String
+  price3to6Days   Float
+  price7to14Days  Float
+  price15PlusDays Float
+  category        VehicleCategory @relation(fields: [categoryId], references: [id])
+  season          Season          @relation(fields: [seasonId], references: [id])
+
+  @@unique([categoryId, seasonId, group])
+}
+
+model RentalOption {
+  id           String                @id @default(cuid())
+  code         String                @unique
+  name         String
+  displayOrder Int                   @default(0)
+  visible      Boolean               @default(true)
+  maxQty       Int                   @default(1)
+  priceType    String                @default("per Day")
+  maxCost      Float?
+  freeOverDays Int?
+  photo        String?
+  description  String?
+  createdAt    DateTime              @default(now())
+  updatedAt    DateTime              @updatedAt
+  pricingTiers RentalOptionPricing[]
+}
+
+model RentalOptionPricing {
+  id             String       @id @default(cuid())
+  rentalOptionId String
+  vehicleGroups  String
+  price          Float
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  rentalOption   RentalOption @relation(fields: [rentalOptionId], references: [id], onDelete: Cascade)
+
+  @@unique([rentalOptionId, vehicleGroups])
+}
+
+model Location {
+  id             String   @id @default(cuid())
+  name           String   @unique
+  type           String
+  displayOrder   Int      @default(0)
+  visible        Boolean  @default(true)
+  address        String?
+  city           String?
+  postcode       String?
+  country        String?
+  phone          String?
+  email          String?
+  openingHours   String?
+  latitude       Float?
+  longitude      Float?
+  instructions   String?
+  facilities     String?
+  isPickupPoint  Boolean  @default(true)
+  isDropoffPoint Boolean  @default(true)
+  hasDelivery    Boolean  @default(false)
+  deliveryRadius Int?
+  deliveryFee    Float?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  firstName String
+  lastName  String
+  email     String    @unique
+  phone     String
+  bookings  Booking[]
+}
+
+model Promotion {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  discount    Float
+  startDate   DateTime
+  endDate     DateTime
+  visible     Boolean  @default(true)
+  type        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  startDate     DateTime
+  endDate       DateTime
+  totalPrice    Float
+  status        String
+  customerId    String
+  vehicleId     String
+  invoiceNo     String?
+  paymentStatus String   @default("Pending")
+  paymentType   String   @default("On Arrival")
+  transactionId String?
+  customer      Customer @relation(fields: [customerId], references: [id])
+  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
+}
+
+model GeneralSetting {
+  id                        String   @id @default(cuid())
+  maxRowsPerPage           Int      @default(500)
+  vatPercentage            Float    @default(19.0)
+  payOnArrivalDiscount     Float    @default(10.0)
+  payOnlineDiscount        Float    @default(15.0)
+  nextInvoiceNumber        String   @default("14312")
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+  contactEmail             String?
+  contactPhone             String?
+  socialFacebook           String?
+  socialInstagram          String?
+  socialLinkedin           String?
+  socialTwitter            String?
+  glassmorphismEnabled     Boolean  @default(true)
+}
+
+model Post {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  slugRu      String?  @unique // Russian URL slug
+  title       String
+  titleRu     String?  // Russian title
+  summary     String?  @db.Text // Summary for preview
+  summaryRu   String?  @db.Text // Russian summary
+  content     String   @db.Text
+  contentRu   String?  @db.Text // Russian content
+  imageUrl    String?
+  published   Boolean  @default(false)
+  publishedRu Boolean  @default(false) // Separate publish status for Russian
+  category    String?  // Simple category string for now
+  readTime    Int?     // Estimated read time in minutes
+  featured    Boolean  @default(false) // Featured posts
+  views       Int      @default(0) // View count
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model SiteContent {
+  id        String    @id @default(cuid())
+  key       String    @unique // e.g., 'home_hero_image', 'promo_banner_1'
+  type      String    // 'image', 'text', 'link'
+  value     String    @db.Text
+  altText   String?   // For images
+  linkUrl   String?   // For banners or other linked content
+  group     String    // To group content in the admin UI, e.g. 'Homepage'
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+

@@ -1,0 +1,1250 @@
+"use client";
+
+import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import Select from 'react-select';
+import DatePicker from 'react-datepicker';
+import "react-datepicker/dist/react-datepicker.css";
+import { Location } from '../admin/setup/locations/actions';
+
+interface BookingFormData {
+  pickupLocation: string;
+  dropoffLocation: string;
+  pickupDate: Date | null;
+  dropoffDate: Date | null;
+  pickupHour: string;
+  pickupMinute: string;
+  dropoffHour: string;
+  dropoffMinute: string;
+  differentDropoff: boolean;
+  pickupCustomLocation: string;
+  pickupCustomCity: string;
+  dropoffCustomLocation: string;
+  dropoffCustomCity: string;
+}
+
+interface BookingFormProps {
+  isCompact?: boolean;
+  initialPickupLocations?: any[];
+  initialDropoffLocations?: any[];
+}
+
+const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
+  const router = useRouter();
+  const [formData, setFormData] = useState<BookingFormData>({
+    pickupLocation: '',
+    dropoffLocation: '',
+    pickupDate: null,
+    dropoffDate: null,
+    pickupHour: '09',
+    pickupMinute: '00',
+    dropoffHour: '09',
+    dropoffMinute: '00',
+    differentDropoff: false,
+    pickupCustomLocation: '',
+    pickupCustomCity: '',
+    dropoffCustomLocation: '',
+    dropoffCustomCity: ''
+  });
+
+  const locations = [
+    { value: 'larnaka-airport', label: 'Larnaka Airport' },
+    { value: 'pafos-airport', label: 'Pafos Airport' },
+    { value: 'pafos-office', label: 'Pafos Office' },
+    { value: 'limassol-office', label: 'Limassol Office' },
+    { value: 'ayia-napa-office', label: 'Ayia Napa Office' },
+    { value: 'nicosia-office', label: 'Nicosia Office' },
+    { value: 'custom', label: 'Custom (Hotel or Address)' }
+  ];
+
+  const cities = [
+    { value: 'nicosia', label: 'Nicosia' },
+    { value: 'larnaca', label: 'Larnaca' },
+    { value: 'limassol', label: 'Limassol' },
+    { value: 'paphos', label: 'Paphos' },
+    { value: 'ayia-napa-protaras', label: 'Ayia Napa/Protaras' }
+  ];
+
+  // Auto-sync drop-off location with pickup location when "different drop-off" is not checked
+  useEffect(() => {
+    if (!formData.differentDropoff) {
+      setFormData(prev => ({
+        ...prev,
+        dropoffLocation: prev.pickupLocation,
+        dropoffCustomLocation: prev.pickupCustomLocation,
+        dropoffCustomCity: prev.pickupCustomCity
+      }));
+    }
+  }, [formData.pickupLocation, formData.pickupCustomLocation, formData.pickupCustomCity, formData.differentDropoff]);
+
+  const [validationError, setValidationError] = useState<string>('');
+
+  const validateBookingTime = () => {
+    if (!formData.pickupDate) {
+      setValidationError('Please select a pickup date.');
+      return false;
+    }
+
+    // Create pickup datetime
+    const pickupDateTime = new Date(formData.pickupDate);
+    pickupDateTime.setHours(parseInt(formData.pickupHour), parseInt(formData.pickupMinute), 0, 0);
+
+    // Get current time
+    const now = new Date();
+
+    // Calculate 24 hours from now
+    const twentyFourHoursFromNow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
+
+    // Check if pickup time is at least 24 hours from now
+    if (pickupDateTime < twentyFourHoursFromNow) {
+      setValidationError('You can book a car at least 24 hours before pick up. Please modify the Pick Up time and try again.');
+      return false;
+    }
+
+    setValidationError('');
+    return true;
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!validateBookingTime()) {
+      return;
+    }
+    
+    // Build search URL with query parameters
+    const searchParams = new URLSearchParams();
+    
+    // Add pickup location
+    if (formData.pickupLocation === 'custom' && formData.pickupCustomLocation && formData.pickupCustomCity) {
+      searchParams.set('pickupLocation', `${formData.pickupCustomLocation}, ${formData.pickupCustomCity}`);
+    } else if (formData.pickupLocation) {
+      const locationLabel = locations.find(loc => loc.value === formData.pickupLocation)?.label || formData.pickupLocation;
+      searchParams.set('pickupLocation', locationLabel);
+    }
+    
+    // Add dropoff location
+    if (formData.differentDropoff) {
+      if (formData.dropoffLocation === 'custom' && formData.dropoffCustomLocation && formData.dropoffCustomCity) {
+        searchParams.set('dropoffLocation', `${formData.dropoffCustomLocation}, ${formData.dropoffCustomCity}`);
+      } else if (formData.dropoffLocation) {
+        const locationLabel = locations.find(loc => loc.value === formData.dropoffLocation)?.label || formData.dropoffLocation;
+        searchParams.set('dropoffLocation', locationLabel);
+      }
+    } else {
+      // Same as pickup location
+      if (formData.pickupLocation === 'custom' && formData.pickupCustomLocation && formData.pickupCustomCity) {
+        searchParams.set('dropoffLocation', `${formData.pickupCustomLocation}, ${formData.pickupCustomCity}`);
+      } else if (formData.pickupLocation) {
+        const locationLabel = locations.find(loc => loc.value === formData.pickupLocation)?.label || formData.pickupLocation;
+        searchParams.set('dropoffLocation', locationLabel);
+      }
+    }
+    
+    // Add dates
+    if (formData.pickupDate) {
+      searchParams.set('pickupDate', formData.pickupDate.toISOString().split('T')[0]);
+    }
+    if (formData.dropoffDate) {
+      searchParams.set('dropoffDate', formData.dropoffDate.toISOString().split('T')[0]);
+    } else if (formData.pickupDate) {
+      searchParams.set('dropoffDate', formData.pickupDate.toISOString().split('T')[0]);
+    }
+    
+    // Add times
+    searchParams.set('pickupTime', `${formData.pickupHour}:${formData.pickupMinute}`);
+    searchParams.set('dropoffTime', `${formData.dropoffHour}:${formData.dropoffMinute}`);
+    
+    // Navigate to search page
+    router.push(`/search?${searchParams.toString()}`);
+  };
+
+  const handleDifferentDropoffChange = (checked: boolean) => {
+    setFormData(prev => ({
+      ...prev,
+      differentDropoff: checked,
+      dropoffLocation: checked ? '' : prev.pickupLocation,
+      dropoffCustomLocation: checked ? '' : prev.pickupCustomLocation,
+      dropoffCustomCity: checked ? '' : prev.pickupCustomCity
+    }));
+  };
+
+  const handlePickupLocationChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      pickupLocation: value,
+      pickupCustomLocation: value !== 'custom' ? '' : prev.pickupCustomLocation,
+      pickupCustomCity: value !== 'custom' ? '' : prev.pickupCustomCity
+    }));
+  };
+
+  const handleDropoffLocationChange = (value: string) => {
+    setFormData(prev => ({
+      ...prev,
+      dropoffLocation: value,
+      dropoffCustomLocation: value !== 'custom' ? '' : prev.dropoffCustomLocation,
+      dropoffCustomCity: value !== 'custom' ? '' : prev.dropoffCustomCity
+    }));
+  };
+
+  const getDisplayLocation = (location: string, customLocation: string, customCity: string) => {
+    if (location === 'custom' && customLocation && customCity) {
+      const cityLabel = cities.find(city => city.value === customCity)?.label || customCity;
+      return `${customLocation} (${cityLabel})`;
+    }
+    return locations.find(loc => loc.value === location)?.label || 'Same as pickup location';
+  };
+
+  const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
+  const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
+
+  if (isCompact) {
+    return (
+      <form onSubmit={handleSubmit} className="compact-form-horizontal">
+        <div className="input-group">
+          <label className="form-label">Pick up</label>
+          <select
+            className="form-select"
+            value={formData.pickupLocation}
+            onChange={(e) => handlePickupLocationChange(e.target.value)}
+          >
+            <option value="">Select pickup location</option>
+            {locations.map(loc => (
+              <option key={loc.value} value={loc.value}>{loc.label}</option>
+            ))}
+          </select>
+        </div>
+
+        <div className="input-group date-group">
+          <label className="form-label">Date</label>
+          <div className="date-picker-wrapper">
+            <DatePicker
+              selected={formData.pickupDate}
+              onChange={(date) => setFormData({ ...formData, pickupDate: date })}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="Select date"
+              className="date-picker-input"
+              minDate={new Date()}
+            />
+          </div>
+        </div>
+
+        <div className="input-group time-group">
+          <label className="form-label">Hour</label>
+          <select className="form-select" value={formData.pickupHour} onChange={(e) => setFormData({ ...formData, pickupHour: e.target.value })}>
+            {hours.map(hour => <option key={hour} value={hour}>{hour}</option>)}
+          </select>
+        </div>
+
+        <div className="input-group time-group">
+          <label className="form-label">Minute</label>
+          <select className="form-select" value={formData.pickupMinute} onChange={(e) => setFormData({ ...formData, pickupMinute: e.target.value })}>
+            {minutes.map(minute => <option key={minute} value={minute}>{minute}</option>)}
+          </select>
+        </div>
+
+        <div className="input-group">
+          <div className="drop-off-header-compact">
+            <label className="form-label">Drop off</label>
+            <div className="checkbox-group">
+              <input type="checkbox" id="differentLocationCompact" checked={formData.differentDropoff} onChange={(e) => handleDifferentDropoffChange(e.target.checked)} />
+              <label htmlFor="differentLocationCompact">Different Drop off location</label>
+            </div>
+          </div>
+          {formData.differentDropoff ? (
+            <select
+              className="form-select"
+              value={formData.dropoffLocation}
+              onChange={(e) => handleDropoffLocationChange(e.target.value)}
+            >
+              <option value="">Select drop-off location</option>
+              {locations.map(loc => (
+                <option key={loc.value} value={loc.value}>{loc.label}</option>
+              ))}
+            </select>
+          ) : (
+             <div className="location-display-compact">Same as pickup location</div>
+          )}
+        </div>
+
+        <div className="input-group date-group">
+          <label className="form-label">Date</label>
+          <div className="date-picker-wrapper">
+            <DatePicker
+              selected={formData.dropoffDate}
+              onChange={(date) => setFormData({ ...formData, dropoffDate: date })}
+              dateFormat="dd/MM/yyyy"
+              placeholderText="Select date"
+              className="date-picker-input"
+              minDate={formData.pickupDate || new Date()}
+              disabled={!formData.differentDropoff}
+            />
+          </div>
+        </div>
+
+        <div className="input-group time-group">
+          <label className="form-label">Hour</label>
+          <select className="form-select" value={formData.dropoffHour} onChange={(e) => setFormData({ ...formData, dropoffHour: e.target.value })}>
+            {hours.map(hour => <option key={hour} value={hour}>{hour}</option>)}
+          </select>
+        </div>
+
+        <div className="input-group time-group">
+          <label className="form-label">Minute</label>
+          <select className="form-select" value={formData.dropoffMinute} onChange={(e) => setFormData({ ...formData, dropoffMinute: e.target.value })}>
+            {minutes.map(minute => <option key={minute} value={minute}>{minute}</option>)}
+          </select>
+        </div>
+
+        <div className="input-group">
+          <button type="submit" className="search-button-compact">
+            <span className="search-icon">🔍</span>
+            SEARCH
+          </button>
+        </div>
+        
+        {validationError && (
+          <div className="error-message-compact" style={{ display: 'block' }}>
+            {validationError}
+          </div>
+        )}
+        <style jsx>{`
+          .compact-form-horizontal {
+            display: flex;
+            align-items: flex-end;
+            gap: 10px;
+            width: 100%;
+          }
+          .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            flex-grow: 1;
+            flex-basis: 150px;
+          }
+          .input-group.date-group {
+            flex-grow: 0;
+            flex-basis: 130px;
+            flex-shrink: 0;
+          }
+           .input-group.time-group {
+            flex-grow: 0;
+            flex-basis: 70px;
+            flex-shrink: 0;
+          }
+          .form-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: #003366;
+            text-transform: uppercase;
+          }
+          .form-input, .form-select {
+            padding: 8px;
+            border: 1px solid #003366;
+            border-radius: 4px;
+            background-color: white;
+            color: #003366;
+            font-size: 14px;
+            width: 100%;
+            height: 37px;
+          }
+          .date-picker-wrapper {
+            width: 100%;
+          }
+          :global(.date-picker-wrapper .react-datepicker-wrapper) {
+            width: 100% !important;
+          }
+          :global(.date-picker-wrapper .react-datepicker__input-container) {
+            width: 100% !important;
+          }
+          :global(.date-picker-wrapper .react-datepicker__input-container input) {
+            padding: 8px !important;
+            border: 1px solid #003366 !important;
+            border-radius: 4px !important;
+            background-color: white !important;
+            color: #003366 !important;
+            font-size: 14px !important;
+            height: 37px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            font-family: inherit !important;
+            font-weight: normal !important;
+            margin: 0 !important;
+          }
+          :global(.date-picker-input) {
+            padding: 8px !important;
+            border: 1px solid #003366 !important;
+            border-radius: 4px !important;
+            background-color: white !important;
+            color: #003366 !important;
+            font-size: 14px !important;
+            height: 37px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+            font-family: inherit !important;
+            font-weight: normal !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+          }
+          :global(.date-picker-input:focus) {
+            outline: none !important;
+            border-color: #0066cc !important;
+            box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2) !important;
+          }
+          .location-display-compact {
+            padding: 8px;
+            border: 1px solid #003366;
+            border-radius: 4px;
+            background-color: #e9ecef;
+            color: #6c757d;
+            font-size: 12px;
+            height: 37px; 
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+          }
+          .drop-off-header-compact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          }
+          .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+          }
+          .checkbox-group label {
+            font-size: 11px;
+            color: #003366;
+            font-weight: normal;
+          }
+          .search-button-compact {
+            padding: 8px 16px;
+            border: 2px solid #003366;
+            border-radius: 4px;
+            background-color: white;
+            color: #003366;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 37px;
+          }
+          .search-button-compact:hover {
+            background-color: #003366;
+            color: white;
+          }
+          .error-message-compact {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #fee2e2;
+            color: #dc2626;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            border: 1px solid #fecaca;
+            margin-top: 4px;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+          }
+          
+          /* Custom DatePicker Styles */
+          :global(.react-datepicker) {
+            border: 2px solid #003366;
+            border-radius: 8px;
+            font-family: inherit;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          }
+          :global(.react-datepicker__header) {
+            background-color: #003366;
+            border-bottom: none;
+            border-radius: 6px 6px 0 0;
+          }
+          :global(.react-datepicker__current-month) {
+            color: white;
+            font-weight: 600;
+            font-size: 16px;
+          }
+          :global(.react-datepicker__day-name) {
+            color: white;
+            font-weight: 500;
+          }
+          :global(.react-datepicker__navigation) {
+            top: 12px;
+          }
+          :global(.react-datepicker__navigation--previous) {
+            border-right-color: white;
+          }
+          :global(.react-datepicker__navigation--next) {
+            border-left-color: white;
+          }
+          :global(.react-datepicker__day) {
+            color: #003366;
+            font-weight: 500;
+            border-radius: 4px;
+            margin: 2px;
+            width: 32px;
+            height: 32px;
+            line-height: 32px;
+          }
+          :global(.react-datepicker__day:hover) {
+            background-color: #ffc107;
+            color: #003366;
+          }
+          :global(.react-datepicker__day--selected) {
+            background-color: #003366;
+            color: white;
+          }
+          :global(.react-datepicker__day--selected:hover) {
+            background-color: #002244;
+          }
+          :global(.react-datepicker__day--today) {
+            background-color: #e6f3ff;
+            color: #003366;
+            font-weight: 600;
+          }
+          :global(.react-datepicker__day--disabled) {
+            color: #ccc;
+            cursor: not-allowed;
+          }
+          :global(.react-datepicker__day--disabled:hover) {
+            background-color: transparent;
+          }
+        `}</style>
+      </form>
+    );
+  }
+
+  return (
+    <div className={`booking-form-container ${isCompact ? 'compact' : ''}`}>
+      <div className="booking-card">
+        {!isCompact && (
+          <>
+            <h2 className="form-title">Find Your Perfect Car</h2>
+          </>
+        )}
+
+        <form onSubmit={handleSubmit} className="booking-form">
+          {/* Pick up Location */}
+          <div className="form-group">
+            <label className="form-label">
+              📍 Pick up Location
+            </label>
+            <select 
+              className="form-select"
+              value={formData.pickupLocation} 
+              onChange={(e) => handlePickupLocationChange(e.target.value)}
+            >
+              <option value="">Select pickup location</option>
+              {locations.map(loc => (
+                <option key={loc.value} value={loc.value}>{loc.label}</option>
+              ))}
+            </select>
+            
+            {/* Custom pickup location fields */}
+            {formData.pickupLocation === 'custom' && (
+              <div className="custom-location-fields">
+                <select 
+                  className="form-select"
+                  value={formData.pickupCustomCity}
+                  onChange={(e) => setFormData({...formData, pickupCustomCity: e.target.value})}
+                >
+                  <option value="">Select city/area</option>
+                  {cities.map(city => (
+                    <option key={city.value} value={city.value}>{city.label}</option>
+                  ))}
+                </select>
+                <input
+                  type="text"
+                  className="form-input"
+                  placeholder="Enter hotel name or address"
+                  value={formData.pickupCustomLocation}
+                  onChange={(e) => setFormData({...formData, pickupCustomLocation: e.target.value})}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* Date and Time Row */}
+          <div className="date-time-row">
+            <div className="form-group">
+              <label className="form-label">Date</label>
+              <div className="date-picker-wrapper">
+                <DatePicker
+                  selected={formData.pickupDate}
+                  onChange={(date) => setFormData({...formData, pickupDate: date})}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Select date"
+                  className="date-picker-input"
+                  minDate={new Date()}
+              />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Hour</label>
+              <select
+                className="form-select"
+                value={formData.pickupHour}
+                onChange={(e) => setFormData({ ...formData, pickupHour: e.target.value })}
+              >
+                {hours.map(hour => (
+                  <option key={hour} value={hour}>{hour}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Minute</label>
+              <select
+                className="form-select"
+                value={formData.pickupMinute}
+                onChange={(e) => setFormData({ ...formData, pickupMinute: e.target.value })}
+              >
+                {minutes.map(minute => (
+                  <option key={minute} value={minute}>{minute}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Drop off Section */}
+          <div className="form-group">
+            <div className="drop-off-header">
+              <label className="form-label">
+                📍 Drop off
+              </label>
+              <div className="checkbox-group">
+                <input 
+                  type="checkbox" 
+                  id="differentLocation"
+                  checked={formData.differentDropoff}
+                  onChange={(e) => handleDifferentDropoffChange(e.target.checked)}
+                />
+                <label htmlFor="differentLocation">Different Drop off location</label>
+              </div>
+            </div>
+            
+            {/* Drop off Location Selector */}
+            <div className="drop-off-location">
+              {formData.differentDropoff ? (
+                <>
+                  <select 
+                    className="form-select"
+                    value={formData.dropoffLocation} 
+                    onChange={(e) => handleDropoffLocationChange(e.target.value)}
+                  >
+                    <option value="">Select drop-off location</option>
+                    {locations.map(loc => (
+                      <option key={loc.value} value={loc.value}>{loc.label}</option>
+                    ))}
+                  </select>
+                  
+                  {/* Custom dropoff location fields */}
+                  {formData.dropoffLocation === 'custom' && (
+                    <div className="custom-location-fields">
+                      <select 
+                        className="form-select"
+                        value={formData.dropoffCustomCity}
+                        onChange={(e) => setFormData({...formData, dropoffCustomCity: e.target.value})}
+                      >
+                        <option value="">Select city/area</option>
+                        {cities.map(city => (
+                          <option key={city.value} value={city.value}>{city.label}</option>
+                        ))}
+                      </select>
+                      <input
+                        type="text"
+                        className="form-input"
+                        placeholder="Enter hotel name or address"
+                        value={formData.dropoffCustomLocation}
+                        onChange={(e) => setFormData({...formData, dropoffCustomLocation: e.target.value})}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="location-display">
+                  {formData.pickupLocation ? 
+                    getDisplayLocation(formData.pickupLocation, formData.pickupCustomLocation, formData.pickupCustomCity)
+                    : 'Same as pickup location'
+                  }
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Drop off Date and Time */}
+          <div className="date-time-row">
+            <div className="form-group">
+              <label className="form-label">Date</label>
+              <div className="date-picker-wrapper">
+                <DatePicker
+                  selected={formData.dropoffDate}
+                  onChange={(date) => setFormData({...formData, dropoffDate: date})}
+                  dateFormat="dd/MM/yyyy"
+                  placeholderText="Select date"
+                  className="date-picker-input"
+                  minDate={formData.pickupDate || new Date()}
+              />
+              </div>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Hour</label>
+              <select
+                className="form-select"
+                value={formData.dropoffHour}
+                onChange={(e) => setFormData({ ...formData, dropoffHour: e.target.value })}
+              >
+                {hours.map(hour => (
+                  <option key={hour} value={hour}>{hour}</option>
+                ))}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Minute</label>
+              <select
+                className="form-select"
+                value={formData.dropoffMinute}
+                onChange={(e) => setFormData({ ...formData, dropoffMinute: e.target.value })}
+              >
+                {minutes.map(minute => (
+                  <option key={minute} value={minute}>{minute}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          {/* Search Button - Moved above benefits */}
+          <button type="submit" className="search-button">
+            <span className="search-icon">🔍</span>
+            FIND YOUR VEHICLE
+          </button>
+
+          {/* Error Message */}
+          {validationError && (
+            <div className="error-message" style={{ display: 'block' }}>
+              {validationError}
+            </div>
+          )}
+
+          {/* Included Benefits */}
+          {!isCompact && (
+            <div className="benefits-section">
+              <h4>Included Benefits</h4>
+              <div className="benefits-list">
+                <div className="benefit-item">• VAT included & online roadside assistance</div>
+                <div className="benefit-item">• Free SCDW for 7+ days plus rentals</div>
+                <div className="benefit-item">• Free delivery/pick up within town limits</div>
+                <div className="benefit-item">• Unlimited kilometres & young fleet</div>
+              </div>
+            </div>
+          )}
+        </form>
+      </div>
+
+      <style jsx>{`
+        .booking-form-container {
+          display: flex;
+          justify-content: center;
+          padding: 2rem;
+        }
+
+        .booking-card {
+          background: var(--glass-bg-main, rgba(255, 255, 255, 0.75)) !important;
+          backdrop-filter: blur(20px) !important;
+          -webkit-backdrop-filter: blur(20px) !important;
+          border-radius: 16px;
+          padding: 24px;
+          box-shadow: 
+            0 15px 35px -10px rgba(0, 0, 0, 0.15),
+            0 0 0 1px rgba(255, 255, 255, 0.3),
+            inset 0 1px 0 rgba(255, 255, 255, 0.4);
+          width: 100%;
+          max-width: 600px;
+          border: 1px solid rgba(255, 255, 255, 0.2);
+          position: relative;
+        }
+        
+        .booking-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
+          border-radius: 16px;
+          pointer-events: none;
+        }
+        
+        .form-title {
+          font-size: 24px;
+          font-weight: 800;
+          background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          margin: 0 0 20px 0;
+          text-align: center;
+          letter-spacing: -0.025em;
+        }
+
+        .booking-form {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+
+        .form-group {
+          display: flex;
+          flex-direction: column;
+          position: relative;
+        }
+
+        .form-label {
+          font-size: 14px;
+          font-weight: 700;
+          color: #374151;
+          margin-bottom: 12px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          text-transform: uppercase;
+          letter-spacing: 0.025em;
+        }
+
+        .form-input, .form-select {
+          padding: 14px 16px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 12px;
+          font-size: 15px;
+          font-weight: 500;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          background: var(--glass-bg-secondary, rgba(255, 255, 255, 0.6)) !important;
+          backdrop-filter: blur(8px) !important;
+          -webkit-backdrop-filter: blur(8px) !important;
+          box-shadow: 
+            0 3px 5px -1px rgba(0, 0, 0, 0.05),
+            0 1px 3px -1px rgba(0, 0, 0, 0.03),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          position: relative;
+        }
+        
+        .form-input:focus, .form-select:focus {
+          outline: none;
+          border-color: #3b82f6;
+          background: rgba(255, 255, 255, 1);
+          box-shadow: 
+            0 0 0 4px rgba(59, 130, 246, 0.1),
+            0 10px 25px -5px rgba(0, 0, 0, 0.1),
+            0 4px 6px -2px rgba(0, 0, 0, 0.05);
+          transform: translateY(-2px);
+        }
+
+        .form-input:hover, .form-select:hover {
+          border-color: rgba(156, 163, 175, 0.6);
+          background: rgba(255, 255, 255, 1);
+          box-shadow: 
+            0 8px 25px -5px rgba(0, 0, 0, 0.08),
+            0 4px 6px -2px rgba(0, 0, 0, 0.03);
+          transform: translateY(-1px);
+        }
+
+        .form-input:disabled, .form-select:disabled {
+          padding: 18px 20px !important;
+          border: 2px solid rgba(229, 231, 235, 0.4) !important;
+          border-radius: 16px !important;
+          font-size: 16px !important;
+          font-weight: 500 !important;
+          background: rgba(255, 255, 255, 0.98) !important;
+          box-shadow: 
+            0 4px 6px -1px rgba(0, 0, 0, 0.05),
+            0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+          color: #6b7280 !important;
+          cursor: not-allowed !important;
+          opacity: 1 !important;
+        }
+
+        .form-input:disabled:hover, .form-select:disabled:hover {
+          border-color: rgba(229, 231, 235, 0.4) !important;
+          background: rgba(255, 255, 255, 0.98) !important;
+          box-shadow: 
+            0 4px 6px -1px rgba(0, 0, 0, 0.05),
+            0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+          transform: none !important;
+        }
+
+        .search-button {
+          background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+          color: white;
+          border: none;
+          padding: 16px 28px;
+          border-radius: 12px;
+          font-size: 15px;
+          font-weight: 700;
+          cursor: pointer;
+          transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          box-shadow: 
+            0 8px 20px -5px rgba(59, 130, 246, 0.4),
+            0 3px 5px -2px rgba(59, 130, 246, 0.2);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          margin: 12px 0;
+          position: relative;
+          overflow: hidden;
+        }
+
+        .search-button::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: -100%;
+          width: 100%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+          transition: left 0.5s;
+        }
+
+        .search-button:hover::before {
+          left: 100%;
+        }
+
+        .search-button:hover {
+          background: linear-gradient(135deg, #1d4ed8 0%, #1e40af 100%);
+          transform: translateY(-3px);
+          box-shadow: 
+            0 20px 40px -10px rgba(59, 130, 246, 0.5),
+            0 8px 16px -4px rgba(59, 130, 246, 0.3);
+        }
+
+        .search-button:active {
+          transform: translateY(-1px);
+          transition: all 0.1s;
+        }
+
+        .search-icon {
+          font-size: 18px;
+          opacity: 0.9;
+        }
+
+        .error-message {
+          background-color: #fee2e2;
+          color: #dc2626;
+          padding: 16px 20px;
+          border-radius: 12px;
+          font-size: 14px;
+          font-weight: 500;
+          border: 1px solid #fecaca;
+          margin: 12px 0;
+          text-align: center;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-row {
+          display: grid;
+          gap: 20px;
+        }
+
+        .date-time-row {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 16px;
+        }
+
+        /* Responsive adjustments */
+        @media (min-width: 640px) {
+          .form-row {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+          }
+
+          .date-time-row {
+            grid-template-columns: 2fr 1fr 1fr;
+            gap: 20px;
+          }
+        }
+
+        @media (max-width: 640px) {
+          .booking-card {
+          padding: 20px;
+            background: var(--glass-bg-main, rgba(255, 255, 255, 0.75)) !important;
+            backdrop-filter: blur(20px) !important;
+            -webkit-backdrop-filter: blur(20px) !important;
+          }
+          .form-title {
+            font-size: 20px;
+          }
+          .form-input, .form-select {
+            font-size: 14px;
+            padding: 12px 14px;
+          }
+          .search-button {
+            font-size: 14px;
+            padding: 16px;
+          }
+        }
+
+        .custom-location-fields {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-top: 16px;
+          padding: 20px;
+          background: var(--glass-bg-tertiary, rgba(255, 255, 255, 0.4)) !important;
+          backdrop-filter: blur(8px) !important;
+          -webkit-backdrop-filter: blur(8px) !important;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .drop-off-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 12px;
+        }
+
+        .drop-off-location {
+          margin-top: 12px;
+        }
+
+        .location-display {
+          padding: 18px 20px;
+          border: 2px solid rgba(255, 255, 255, 0.3);
+          border-radius: 16px;
+          font-size: 16px;
+          background: var(--glass-bg-quaternary, rgba(255, 255, 255, 0.5)) !important;
+          backdrop-filter: blur(8px) !important;
+          -webkit-backdrop-filter: blur(8px) !important;
+          color: #6b7280;
+          font-weight: 500;
+          font-style: italic;
+          box-shadow: 
+            0 4px 6px -1px rgba(0, 0, 0, 0.05),
+            0 2px 4px -1px rgba(0, 0, 0, 0.03),
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .checkbox-group {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 13px;
+          font-weight: 500;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+          margin: 0;
+          transform: scale(1.1);
+        }
+
+        .benefits-section {
+          background: var(--glass-bg-tertiary, rgba(255, 255, 255, 0.4)) !important;
+          backdrop-filter: blur(10px) !important;
+          -webkit-backdrop-filter: blur(10px) !important;
+          padding: 24px;
+          border-radius: 16px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 
+            0 4px 6px -1px rgba(0, 0, 0, 0.05),
+            0 2px 4px -1px rgba(0, 0, 0, 0.03),
+            inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .benefits-section h4 {
+          margin: 0 0 14px 0;
+          font-size: 15px;
+          font-weight: 700;
+          color: #374151;
+          letter-spacing: -0.01em;
+        }
+
+        .benefits-list {
+          display: flex;
+          flex-direction: column;
+          gap: 8px;
+        }
+
+        .benefit-item {
+          font-size: 13px;
+          color: #6b7280;
+          line-height: 1.5;
+          font-weight: 500;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        .benefit-item::before {
+          content: "✓";
+          color: #10b981;
+          font-weight: bold;
+          font-size: 14px;
+        }
+
+        .date-picker-wrapper {
+          width: 100%;
+        }
+        
+        :global(.date-picker-wrapper .react-datepicker-wrapper) {
+          width: 100% !important;
+        }
+        
+        :global(.date-picker-wrapper .react-datepicker__input-container) {
+          width: 100% !important;
+        }
+        
+        :global(.date-picker-wrapper .react-datepicker__input-container input) {
+          padding: 14px 16px !important;
+          border: 2px solid rgba(229, 231, 235, 0.6) !important;
+          border-radius: 10px !important;
+          font-size: 15px !important;
+          transition: all 0.2s ease !important;
+          background: rgba(255, 255, 255, 0.8) !important;
+          font-weight: 500 !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          font-family: inherit !important;
+          margin: 0 !important;
+          }
+
+        :global(.date-picker-input) {
+          padding: 14px 16px !important;
+          border: 2px solid rgba(229, 231, 235, 0.6) !important;
+          border-radius: 10px !important;
+          font-size: 15px !important;
+          transition: all 0.2s ease !important;
+          background: rgba(255, 255, 255, 0.8) !important;
+          font-weight: 500 !important;
+          width: 100% !important;
+          box-sizing: border-box !important;
+          font-family: inherit !important;
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          -moz-appearance: none !important;
+        }
+        
+        :global(.date-picker-input:focus) {
+          outline: none !important;
+          border-color: #059669 !important;
+          background: rgba(255, 255, 255, 0.9) !important;
+          box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1) !important;
+          transform: translateY(-1px) !important;
+          }
+
+        :global(.date-picker-input:hover) {
+          border-color: rgba(209, 213, 219, 0.8) !important;
+          background: rgba(255, 255, 255, 0.9) !important;
+        }
+        
+        /* Modern Green DatePicker Calendar Styles */
+        :global(.react-datepicker) {
+          border: 2px solid #059669 !important;
+          border-radius: 12px !important;
+          font-family: inherit !important;
+          box-shadow: 0 10px 25px rgba(5, 150, 105, 0.15) !important;
+          overflow: hidden !important;
+          }
+        :global(.react-datepicker__header) {
+          background: linear-gradient(135deg, #059669, #047857) !important;
+          border-bottom: none !important;
+          border-radius: 10px 10px 0 0 !important;
+          padding: 16px 0 !important;
+        }
+        :global(.react-datepicker__current-month) {
+          color: white !important;
+          font-weight: 600 !important;
+          font-size: 18px !important;
+          margin-bottom: 8px !important;
+          }
+        :global(.react-datepicker__day-name) {
+          color: white !important;
+          font-weight: 500 !important;
+          width: 40px !important;
+          margin: 2px !important;
+        }
+        :global(.react-datepicker__navigation) {
+          top: 18px !important;
+          width: 24px !important;
+          height: 24px !important;
+          border-radius: 50% !important;
+          background: rgba(255, 255, 255, 0.2) !important;
+          transition: all 0.2s ease !important;
+        }
+        :global(.react-datepicker__navigation:hover) {
+          background: rgba(255, 255, 255, 0.3) !important;
+          transform: scale(1.1) !important;
+        }
+        :global(.react-datepicker__navigation--previous) {
+          border-right-color: white !important;
+          left: 12px !important;
+        }
+        :global(.react-datepicker__navigation--next) {
+          border-left-color: white !important;
+          right: 12px !important;
+        }
+        :global(.react-datepicker__day) {
+          color: #374151 !important;
+          font-weight: 500 !important;
+          border-radius: 8px !important;
+          margin: 3px !important;
+          width: 36px !important;
+          height: 36px !important;
+          line-height: 36px !important;
+          transition: all 0.2s ease !important;
+          position: relative !important;
+        }
+        :global(.react-datepicker__day:hover) {
+          background: linear-gradient(135deg, #10b981, #059669) !important;
+          color: white !important;
+          transform: scale(1.05) !important;
+          box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3) !important;
+        }
+        :global(.react-datepicker__day--selected) {
+          background: linear-gradient(135deg, #059669, #047857) !important;
+          color: white !important;
+          font-weight: 600 !important;
+          box-shadow: 0 4px 12px rgba(5, 150, 105, 0.4) !important;
+        }
+        :global(.react-datepicker__day--selected:hover) {
+          background: linear-gradient(135deg, #047857, #065f46) !important;
+          transform: scale(1.05) !important;
+        }
+        :global(.react-datepicker__day--today) {
+          background: linear-gradient(135deg, #d1fae5, #a7f3d0) !important;
+          color: #065f46 !important;
+          font-weight: 600 !important;
+          border: 2px solid #10b981 !important;
+        }
+        :global(.react-datepicker__day--disabled) {
+          color: #d1d5db !important;
+          cursor: not-allowed !important;
+          background: #f9fafb !important;
+        }
+        :global(.react-datepicker__day--disabled:hover) {
+          background: #f9fafb !important;
+          transform: none !important;
+          box-shadow: none !important;
+        }
+        :global(.react-datepicker__month-container) {
+          background: white !important;
+        }
+        :global(.react-datepicker__week) {
+          display: flex !important;
+          justify-content: space-around !important;
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default BookingForm; 

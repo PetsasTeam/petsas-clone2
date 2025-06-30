@@ -1,0 +1,130 @@
+{
+  "Header": {
+    "companyName": "",
+    "home": "HOME",
+    "about": "ABOUT US",
+    "blog": "BLOG",
+    "locations": "LOCATIONS",
+    "contact": "CONTACT",
+    "leasing": "LEASING",
+    "login": "Login / Sign up",
+    "vehicleGuide": "VEHICLE GUIDE"
+  },
+  "Home": {
+    "searchTitle": "Search for a car",
+    "blogSection": "Latest from our blog",
+    "title": "Your reliable partner in Cyprus car rental"
+  },
+  "BookingForm": {
+    "pickupLocation": "Pick up location",
+    "dropoffLocation": "Drop off location",
+    "pickupDate": "Pick up date",
+    "dropoffDate": "Drop off date",
+    "time": "Time",
+    "differentDropoff": "Different drop-off location",
+    "search": "Search",
+    "benefits": [
+      "VAT included",
+      "24hrs roadside assistance",
+      "Free SCDW for 7+ day rentals",
+      "Free delivery within town limits",
+      "Unlimited kilometres & young fleet"
+    ],
+    "requiredFields": "Please fill in all required fields.",
+    "invalidDate": "Drop-off date and time must be after pick-up date and time."
+  },
+  "BlogPreview": {
+    "blog1Title": "Flexible Travel in Cyprus – Discover the Island on Your Own Terms",
+    "blog2Title": "Explore the Wonders of Cyprus – Top Attractions & Experiences",
+    "blog3Title": "Embark on the Ultimate Cyprus Journey with Petsas Car Rental",
+    "blog1Date": "14/05/2023 | Rental Tips",
+    "blog2Date": "07/04/2023 | Rental Tips",
+    "blog3Date": "29/03/2023 | Rental Tips"
+  },
+  "InfoBanners": {
+    "locations": "Rental Locations: Convenient island-wide locations including Larnaka & Paphos International Airports",
+    "vehicleGuide": "Vehicle Guide: Wide selection of rental cars to fit any lifestyle and budget"
+  },
+  "Footer": {
+    "copyright": "© 2024 Andreas Petsas & Sons Public Ltd. Disclaimer | Privacy Policy | Cookie Policy",
+    "credit": "Design & Development by BDigital | Powered by WebsiteLio"
+  },
+  "VehicleGuide": {
+    "title": "Vehicle Guide"
+  },
+  "EnrichedInfo": {
+    "title": "Why Choose Petsas?",
+    "experience": "60+ Years of Experience",
+    "experience_desc": "A legacy of trust and reliability in car rentals.",
+    "fleet": "1,800+ Vehicle Fleet",
+    "fleet_desc": "Wide selection from economy to luxury to fit your needs.",
+    "support": "24/7 Island-Wide Support",
+    "support_desc": "Peace of mind with round-the-clock assistance.",
+    "locations": "Convenient Airport & City Locations",
+    "locations_desc": "Easy pick-up and drop-off across Cyprus."
+  },
+  "AboutUs": {
+    "title": "About Us",
+    "intro": {
+      "company": "Andreas Petsas and Sons Public Ltd, ",
+      "pioneer": "a pioneer in the Cyprus car rental business since 1962, ",
+      "description": "ranks amongst the largest self-drive car hire and car leasing companies in its sector. With a fleet of approximately 1800 vehicles of various types and makes, ranging from economy to luxury, saloon, minibuses, cabrios, 4x4 jeeps, it covers almost every demand in the field of car hire."
+    },
+    "mission": {
+      "title": "Our Mission",
+      "text": "With the reliance of more than 60 years of presence in the Cyprus car rental market, the company aims at continued modernisation and offer of vehicles and services for a far-fetching and economically competitive service to customers. Our goal is to offer our customers an enjoyable experience, with reliable cars, excellent quality of service as well as favourable rental conditions and our staff is appropriately trained to carry out this task in an efficient and effective manner."
+    },
+    "fleet": {
+      "title": "Our Fleet",
+      "text": "Our extensive fleet of approximately 1800 vehicles includes a wide variety of makes and models, ranging from economical city cars to luxurious sedans, spacious minibuses, stylish cabriolets, and rugged 4x4 jeeps, ensuring we can meet any car rental requirement."
+    },
+    "presence": {
+      "title": "Our Presence",
+      "text": "The company maintains offices in all major towns and holiday resorts of the free area of Cyprus as well as at Larnaka and Pafos International Airports and provides 24 hour service to all of its customers all the year round."
+    },
+    "quote": "Our goal is to offer our customers an enjoyable experience, with reliable cars, excellent quality of service as well as favourable rental conditions.",
+    "stats": {
+      "experience": "Years of Experience",
+      "vehicles": "Vehicles in Fleet"
+    },
+    "ourValues": {
+      "quality": {
+        "title": "Quality and Reliability",
+        "text": "We are committed to providing reliable cars and excellent service to ensure an enjoyable and hassle-free experience for our customers."
+      },
+      "modernization": {
+        "title": "Continuous Modernization",
+        "text": "We constantly aim to modernize our fleet and services to offer competitive and cutting-edge solutions in the car rental market."
+      }
+    }
+  },
+  "ContactUs": {
+    "title": "Contact Us",
+    "officeTitle": "Head Office & Reservations",
+    "address": "Leoforos Kostaki Pantelidi 24 A-B, CY1010, Nicosia",
+    "phone": "Tel: +357 22456450",
+    "fax": "Fax: +357 22662002",
+    "email1": "carrentals@petsas.com.cy",
+    "email2": "rent_a_car@petsas.com.cy",
+    "viewLocationsPrompt": {
+      "text": "You may also view our",
+      "link": "Rental Locations"
+    },
+    "formTitle": "Send us a message",
+    "form": {
+      "fullName": "Full Name",
+      "email": "Email Address",
+      "phone": "Phone Number",
+      "message": "Your Message",
+      "submit": "Submit",
+      "clear": "Clear Form"
+    }
+  },
+  "Locations": {
+    "title": "Rental Locations",
+    "subtitle": "Find our convenient locations across Cyprus for easy car rental pickup and drop-off",
+    "emergency": "Emergency Contact",
+    "islandwide": "Islandwide Service",
+    "generalInquiries": "General Inquiries"
+  }
+} 

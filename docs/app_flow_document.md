@@ -1,0 +1,39 @@
+# App Flow Document
+
+## Onboarding and Sign-In/Sign-Up
+
+When a new visitor arrives at the site, they first encounter a clean landing page featuring the company logo, navigation links for Home, Special Offers, FAQ, and Contact, plus a prominent search form for choosing pickup and drop-off locations along with rental dates. In the top right corner, they see options to Sign In or Sign Up. To create an account, the user clicks Sign Up, which opens a form asking for their name, email address, a secure password, and an optional phone number. After submitting this form, the user receives a confirmation email to verify their address. Once they verify, they are taken to the homepage and remain signed in. Returning users click Sign In, enter their email and password, and if they have forgotten their password, they click a link that sends a reset email. Upon resetting their password, they return to the login form, enter new credentials, and proceed into the site. Signing out is always accessible from an account menu in the header, which immediately returns them to the landing page in a signed-out state.
+
+Guest checkout is offered in the booking workflow, so a user who prefers not to sign up can proceed with a single-use form during the review stage. They enter their personal and contact details only when finalizing a booking, without creating a permanent account.
+
+## Main Dashboard or Home Page
+
+After signing in or completing verification, the user lands on the home page, which presents the search interface for rental vehicles. This main dashboard features a header with the brand logo on the left, navigation links in the center for Special Offers, FAQ, Contact, and language toggles for English or Russian. On the right side of the header sits an account icon that reveals links to the User Dashboard, Settings, and Sign Out. Below the header, the user sees the pickup and drop-off dropdowns and a calendar widget for selecting rental dates. A large search button sits under these fields. Scrolling down reveals featured special offers that the user can explore. The footer includes links to privacy policy, terms of service, and social media.
+
+From this main page, the user can begin a new search, click into a special offer to see a promotion detail and start a booking with a pre-applied discount, or navigate to FAQ or Contact pages for information.
+
+## Detailed Feature Flows and Page Transitions
+
+When the user fills in pickup and drop-off locations and selects rental dates, they click Search to see all available vehicles for that period. The site transitions to the Vehicle Listings page, showing a grid of cards. Each card highlights an image of the vehicle, make and model, group classification, type, transmission, fuel, seating capacity, and the daily base rate. Above the grid, small search controls allow the user to adjust dates or locations at any time.
+
+Clicking on a vehicle card brings the user to the Vehicle Detail page, which features a gallery of high-quality images and a clear list of specifications. Below the specifications, there is a set of insurance options describing Collision Damage Waiver (CDW) and Super CDW, followed by a list of extras such as GPS, child seat, booster seat, roof rack, ski rack, underbody protection, and windscreen cover. Toggling any extra or insurance package immediately updates the price summary on the side of the page. Once satisfied, the user clicks the Review Booking button.
+
+The Review Booking page displays a full summary of the selected vehicle, rental period, pickup and drop-off locations, chosen extras, insurance options, and a cost breakdown showing base rates, any dynamic or seasonal pricing adjustments, promotional discounts, and the total amount. If the user is not signed in, they are prompted to choose between signing in or continuing as a guest. If they are already signed in, they see a Continue to Payment button.
+
+After clicking Continue, the user arrives at the Payment Options page. Here they choose between paying online with credit or debit card via the JCC gateway to receive a 15 percent discount or paying on arrival for a 10 percent discount. If online payment is selected, the user enters card details in a secure form and confirms the payment. If pay-on-arrival is chosen, the user confirms knowing they will pay at pickup. In both cases, clicking Confirm initiates the reservation.
+
+On successful reservation, the screen transitions to the Booking Confirmation page, which shows a booking reference number, pickup instructions, vehicle details, and a summary of payment terms. The user also sees buttons to return to the home page or view the reservation in their User Dashboard. An email confirmation is sent automatically, reiterating all details and providing customer support contact information.
+
+Admin users access the site through a separate admin login page. Super-admins sign in to a dashboard that includes links to User Management, Vehicle Inventory, Pricing Rules, Promotions, and Reporting. Branch managers sign in to a dashboard that lists only the bookings and fleet for their specific location. From each dashboard, they navigate between pages to add or remove vehicles, update availability calendars, adjust rates, or review branch performance.
+
+## Settings and Account Management
+
+When a signed-in user clicks the account icon and chooses Settings, they land on the Account Settings page. This page shows fields to update name, email, phone number, and password. Below personal info, there is a section to manage saved payment methods, where users can add or remove credit cards. If the user wants to change language preference, they select English or Russian from a dropdown and click Save to update the site language instantly. After any updates, the page displays a confirmation message. A link at the bottom of the settings page returns the user to the User Dashboard, and the main navigation always allows returning to the search interface.
+
+## Error States and Alternate Paths
+
+If the user enters invalid data at any step, such as an incorrect email format during registration or missing required booking details, an inline error message appears near the relevant field with a clear explanation of how to correct it. During payment, if the JCC gateway declines a card, the page displays an error message explaining the failure and offers the choice to retry with a different card or switch to pay-on-arrival. If the system loses connectivity while searching availability or submitting a form, a banner appears at the top indicating a connection issue, and the user can click Retry to reattempt the action. In case two users try to book the same vehicle at the same time, the second booking attempt shows a message that the vehicle is no longer available and offers to return to the search results or choose another vehicle. Unauthorized attempts to access admin pages redirect the user to the admin login with a notice that credentials are required.
+
+## Conclusion and Overall App Journey
+
+In summary, the user begins on the public landing page and either signs in or proceeds directly with a search for rental vehicles. They select pickup and drop-off locations, choose dates, view available vehicles, and pick their preferred car. On the detail page, they customize their rental with insurance and extras and then review the booking summary. At that point, they sign in or use guest checkout, choose a payment method with a clear discount, and confirm their reservation. The confirmation page and email provide all reservation details. Returning users can log in at any time to manage bookings, update settings, and view past rentals in their User Dashboard. Meanwhile, administrators use dedicated portals to manage fleets, pricing, and users according to their roles. This seamless flow guides every user from discovery through booking to post-rental management without confusion or unnecessary steps.
