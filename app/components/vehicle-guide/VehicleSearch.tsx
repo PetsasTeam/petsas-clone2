@@ -24,6 +24,52 @@ const VehicleSearch: React.FC = () => {
   const [pickupTime, setPickupTime] = useState('09:00');
   const [dropoffTime, setDropoffTime] = useState('09:00');
   const [differentDropoff, setDifferentDropoff] = useState(false);
+  const [locationOptions, setLocationOptions] = useState<Array<{value: string, label: string}>>([]);
+
+  // Load location options
+  React.useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const response = await fetch('/api/locations');
+        if (response.ok) {
+          const locations = await response.json();
+          const options = locations
+            .filter((loc: any) => loc.visible)
+            .map((loc: any) => ({
+              value: loc.id,
+              label: loc.name
+            }));
+          options.push({ value: 'custom', label: 'Custom (Hotel or Address)' });
+          setLocationOptions(options);
+        } else {
+          // Fallback locations
+          setLocationOptions([
+            { value: 'larnaka-airport', label: 'Larnaka Airport' },
+            { value: 'pafos-airport', label: 'Pafos Airport' },
+            { value: 'pafos-office', label: 'Pafos Office' },
+            { value: 'limassol-office', label: 'Limassol Office' },
+            { value: 'ayia-napa-office', label: 'Ayia Napa Office' },
+            { value: 'nicosia-office', label: 'Nicosia Office' },
+            { value: 'custom', label: 'Custom (Hotel or Address)' }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading locations:', error);
+        // Fallback locations
+        setLocationOptions([
+          { value: 'larnaka-airport', label: 'Larnaka Airport' },
+          { value: 'pafos-airport', label: 'Pafos Airport' },
+          { value: 'pafos-office', label: 'Pafos Office' },
+          { value: 'limassol-office', label: 'Limassol Office' },
+          { value: 'ayia-napa-office', label: 'Ayia Napa Office' },
+          { value: 'nicosia-office', label: 'Nicosia Office' },
+          { value: 'custom', label: 'Custom (Hotel or Address)' }
+        ]);
+      }
+    };
+
+    loadLocations();
+  }, []);
 
   // Update dropoff location if not different
   React.useEffect(() => {
@@ -34,11 +80,24 @@ const VehicleSearch: React.FC = () => {
 
   // Handler for search button
   const handleSearch = () => {
-    // 24-hour validation
+    // Location validation
+    if (!pickupLocation || pickupLocation.trim() === '') {
+      setValidationError('Please enter a pickup location.');
+      return;
+    }
+    
+    if (differentDropoff && (!dropoffLocation || dropoffLocation.trim() === '')) {
+      setValidationError('Please enter a dropoff location.');
+      return;
+    }
+
+    // Date validation
     if (!pickupDate) {
       setValidationError('Please select a pickup date.');
       return;
     }
+
+    // 24-hour validation
     const [pickupHour, pickupMinute] = pickupTime.split(':').map(Number);
     const pickupDateTime = new Date(pickupDate);
     pickupDateTime.setHours(pickupHour, pickupMinute, 0, 0);
@@ -53,10 +112,16 @@ const VehicleSearch: React.FC = () => {
     params.set('pickupLocation', pickupLocation);
     params.set('dropoffLocation', dropoffLocation);
     if (pickupDate) {
-      params.set('pickupDate', pickupDate.toISOString().split('T')[0]);
+      const year = pickupDate.getFullYear();
+      const month = String(pickupDate.getMonth() + 1).padStart(2, '0');
+      const day = String(pickupDate.getDate()).padStart(2, '0');
+      params.set('pickupDate', `${year}-${month}-${day}`);
     }
     if (dropoffDate) {
-      params.set('dropoffDate', dropoffDate.toISOString().split('T')[0]);
+      const year = dropoffDate.getFullYear();
+      const month = String(dropoffDate.getMonth() + 1).padStart(2, '0');
+      const day = String(dropoffDate.getDate()).padStart(2, '0');
+      params.set('dropoffDate', `${year}-${month}-${day}`);
     }
     params.set('pickupTime', pickupTime);
     params.set('dropoffTime', dropoffTime);
@@ -101,12 +166,16 @@ const VehicleSearch: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <input
-                            placeholder="Enter pickup location"
+                          <select
                             className="pl-10 h-12 w-full border border-gray-300 rounded-md px-3 py-2"
                             value={pickupLocation}
                             onChange={e => setPickupLocation(e.target.value)}
-                          />
+                          >
+                            <option value="">Select pickup location</option>
+                            {locationOptions.map(loc => (
+                              <option key={loc.value} value={loc.label}>{loc.label}</option>
+                            ))}
+                          </select>
                         </div>
                       </div>
                       <div className="grid grid-cols-3 gap-2">
@@ -166,13 +235,17 @@ const VehicleSearch: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <input
-                            placeholder="Enter drop-off location"
+                          <select
                             className="pl-10 h-12 w-full border border-gray-300 rounded-md px-3 py-2"
                             value={dropoffLocation}
                             onChange={e => setDropoffLocation(e.target.value)}
                             disabled={!differentDropoff}
-                          />
+                          >
+                            <option value="">Select dropoff location</option>
+                            {locationOptions.map(loc => (
+                              <option key={loc.value} value={loc.label}>{loc.label}</option>
+                            ))}
+                          </select>
               </div>
             </div>
                       <div className="grid grid-cols-3 gap-2">
@@ -230,17 +303,17 @@ const VehicleSearch: React.FC = () => {
         </div>
       </div>
 
-      {/* Modern Blue DatePicker Calendar Styles */}
+      {/* Modern Green DatePicker Calendar Styles */}
       <style jsx>{`
         .react-datepicker {
-          border: 2px solid #1e3a8a !important;
+          border: 2px solid #047857 !important;
           border-radius: 12px !important;
           font-family: inherit !important;
-          box-shadow: 0 10px 25px rgba(30, 58, 138, 0.15) !important;
+          box-shadow: 0 10px 25px rgba(4, 120, 87, 0.15) !important;
           overflow: hidden !important;
         }
         .react-datepicker__header {
-          background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
+          background: linear-gradient(135deg, #047857, #059669) !important;
           border-bottom: none !important;
           border-radius: 10px 10px 0 0 !important;
           padding: 16px 0 !important;
@@ -289,26 +362,26 @@ const VehicleSearch: React.FC = () => {
           position: relative !important;
         }
         .react-datepicker__day:hover {
-          background: linear-gradient(135deg, #3b82f6, #1e3a8a) !important;
+          background: linear-gradient(135deg, #10b981, #047857) !important;
           color: white !important;
           transform: scale(1.05) !important;
-          box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3) !important;
+          box-shadow: 0 4px 12px rgba(4, 120, 87, 0.3) !important;
         }
         .react-datepicker__day--selected {
-          background: linear-gradient(135deg, #1e3a8a, #1e40af) !important;
+          background: linear-gradient(135deg, #047857, #059669) !important;
           color: white !important;
           font-weight: 600 !important;
-          box-shadow: 0 4px 12px rgba(30, 58, 138, 0.4) !important;
+          box-shadow: 0 4px 12px rgba(4, 120, 87, 0.4) !important;
         }
         .react-datepicker__day--selected:hover {
-          background: linear-gradient(135deg, #1e40af, #1d4ed8) !important;
+          background: linear-gradient(135deg, #059669, #047857) !important;
           transform: scale(1.05) !important;
         }
         .react-datepicker__day--today {
-          background: linear-gradient(135deg, #dbeafe, #bfdbfe) !important;
-          color: #1e3a8a !important;
+          background: linear-gradient(135deg, #dcfce7, #bbf7d0) !important;
+          color: #047857 !important;
           font-weight: 600 !important;
-          border: 2px solid #3b82f6 !important;
+          border: 2px solid #10b981 !important;
         }
         .react-datepicker__day--disabled {
           color: #d1d5db !important;
@@ -336,8 +409,8 @@ const VehicleSearch: React.FC = () => {
         }
         .date-picker-input:focus {
           outline: none !important;
-          border-color: #1e3a8a !important;
-          box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1) !important;
+          border-color: #047857 !important;
+          box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.1) !important;
         }
       `}</style>
     </div>

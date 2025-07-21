@@ -32,21 +32,20 @@ const Footer: React.FC = () => {
               </a>
             </div>
           </div>
-          
           <div className="footer-center">
             <p>© 2025 Andreas Petsas & Sons Public Ltd. | <a href="/terms" className="underline hover:text-blue-400 transition-colors">Terms & Conditions</a> | Disclaimer | <a href="/privacy-policy" className="underline hover:text-blue-400 transition-colors">Privacy Policy</a> | <a href="/cookie-policy" className="underline hover:text-blue-400 transition-colors">Cookie Policy</a></p>
             <p>Registration Number E8171 - VAT Registration Number 10008171N</p>
-          </div>
-          
-          <div className="footer-right">
-            <div className="payment-logos">
-              <span>💳</span>
-              <span>💰</span>
-              <span>🏦</span>
+            <div className="iso-logos-row">
+              <img src="/LOGO ISO 9001.png" alt="ISO 9001" className="footer-logo iso-logo" />
+              <img src="/LOGO ISO 14001.png" alt="ISO 14001" className="footer-logo iso-logo" />
+              <img src="/LOGO ISO 45001.png" alt="ISO 45001" className="footer-logo iso-logo" />
             </div>
-            <div className="certification-logos">
-              <span>✅</span>
-              <span>🛡️</span>
+          </div>
+          <div className="footer-right">
+            <div className="payment-logos-row">
+              <img src="/mastercard.svg" alt="Mastercard" className="footer-logo payment-logo" />
+              <img src="/visa.svg" alt="Visa" className="footer-logo payment-logo" />
+              <img src="/visasecure.svg" alt="Visa Secure" className="footer-logo payment-logo" />
             </div>
           </div>
         </div>
@@ -140,15 +139,54 @@ const Footer: React.FC = () => {
           color: #bdc3c7;
         }
 
-        .payment-logos, .certification-logos {
+        .footer-right {
           display: flex;
-          gap: 10px;
-          justify-content: flex-end;
-          margin-bottom: 10px;
+          flex-direction: column;
+          align-items: flex-end;
         }
-
-        .payment-logos span, .certification-logos span {
-          font-size: 20px;
+        .logos-row {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 28px;
+          justify-content: center;
+          margin-top: 10px;
+        }
+        .footer-logo {
+          display: inline-block;
+          vertical-align: middle;
+        }
+        .payment-logo {
+          height: 36px;
+          width: auto;
+        }
+        .iso-logo {
+          height: 54px;
+          width: auto;
+          filter: drop-shadow(0 1px 2px rgba(0,0,0,0.15));
+        }
+        .logos-row-centered {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          gap: 28px;
+          margin-top: 18px;
+        }
+        .iso-logos-row {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          justify-content: center;
+          gap: 28px;
+          margin-top: 18px;
+        }
+        .payment-logos-row {
+          display: flex;
+          flex-direction: row;
+          align-items: center;
+          gap: 18px;
+          margin-top: 10px;
         }
 
         @media (max-width: 768px) {
@@ -172,6 +210,13 @@ const Footer: React.FC = () => {
 
           .experience-content p {
             font-size: 14px;
+          }
+          .footer-right {
+            align-items: center;
+          }
+          .logos-row {
+            flex-wrap: wrap;
+            gap: 18px;
           }
         }
       `}</style>

@@ -91,8 +91,8 @@ export default async function RentalPeriodsPage() {
                     {style.icon}
                     {period.name}
                   </td>
-                  <td className="p-4">{new Date(period.startDate).toLocaleDateString()}</td>
-                  <td className="p-4">{new Date(period.endDate).toLocaleDateString()}</td>
+                  <td className="p-4">{new Date(period.startDate).toLocaleDateString('en-GB')}</td>
+                  <td className="p-4">{new Date(period.endDate).toLocaleDateString('en-GB')}</td>
                   <td className="p-4"><TypeBadge type={period.type} /></td>
                   <td className="p-4"><VisibilityToggle visible={true} /></td>
                   <td className="p-4 flex space-x-2">

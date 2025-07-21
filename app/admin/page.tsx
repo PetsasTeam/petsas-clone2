@@ -16,10 +16,10 @@ const AdminDashboard = async () => {
 
   const totalVehicles = await prisma.vehicle.count();
   const totalCustomers = await prisma.customer.count();
-  const activeBookingsCount = await prisma.booking.count({ where: { status: 'CONFIRMED' } });
+  const activeBookingsCount = await prisma.booking.count({ where: { status: 'Confirmed' } });
   const totalCategories = await prisma.vehicleCategory.count();
   const visibleVehicles = await prisma.vehicle.count({ where: { visible: true }});
-  const rentedVehicles = await prisma.booking.count({ where: { status: 'CONFIRMED' }}); // Simplified logic
+  const rentedVehicles = await prisma.booking.count({ where: { status: 'Confirmed' }}); // Simplified logic
 
   const recentBookings = await prisma.booking.findMany({
     take: 5,

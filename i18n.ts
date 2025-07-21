@@ -14,6 +14,7 @@ export const pathnames = {
   '/vehicle-guide': '/vehicle-guide',
   '/login': '/login',
   '/register': '/register',
+  '/dashboard': '/dashboard',
 } satisfies Pathnames<typeof locales>;
 
 export const localePrefix = 'always';

@@ -65,7 +65,7 @@ export type State = {
     overlap?: string[];
     copyFromId?: string[];
   };
-  message?: string | null;
+  message: string;
 };
 
 export async function createRentalPeriod(prevState: State, formData: FormData) {
@@ -130,6 +130,9 @@ export async function createRentalPeriod(prevState: State, formData: FormData) {
             price3to6Days: pricing.price3to6Days,
             price7to14Days: pricing.price7to14Days,
             price15PlusDays: pricing.price15PlusDays,
+            basePrice3to6Days: pricing.basePrice3to6Days ?? pricing.price3to6Days,
+            basePrice7to14Days: pricing.basePrice7to14Days ?? pricing.price7to14Days,
+            basePrice15PlusDays: pricing.basePrice15PlusDays ?? pricing.price15PlusDays,
           })),
         });
       }

@@ -1,0 +1,13 @@
+<svg id="visa" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="67" height="28" viewBox="0 0 67 28">
+  <defs>
+    <linearGradient id="linear-gradient" x1="0.103" y1="0.973" x2="0.931" y2="-0.009" gradientUnits="objectBoundingBox">
+      <stop offset="0" stop-color="#1434cb"/>
+      <stop offset="1" stop-color="#1434cb"/>
+    </linearGradient>
+  </defs>
+  <g id="Rectangle_2308" data-name="Rectangle 2308" transform="translate(0 0)" fill="#fff" stroke="#707070" stroke-width="1" opacity="0">
+    <rect width="67" height="28" stroke="none"/>
+    <rect x="0.5" y="0.5" width="66" height="27" fill="none"/>
+  </g>
+  <path id="visa-2" data-name="visa" d="M18.652.26,12.462,15.031H8.422L5.376,3.243a1.619,1.619,0,0,0-.908-1.3A16,16,0,0,0,.7.689L.789.26h6.5A1.78,1.78,0,0,1,9.052,1.766l1.609,8.547L14.637.26h4.015Zm15.826,9.949c.016-3.9-5.391-4.113-5.354-5.855.011-.53.517-1.093,1.621-1.237a7.211,7.211,0,0,1,3.767.661L35.183.644A10.265,10.265,0,0,0,31.61-.011c-3.777,0-6.435,2.008-6.458,4.883C25.127,7,27.049,8.184,28.5,8.892c1.489.724,1.989,1.189,1.984,1.836-.01.99-1.188,1.428-2.288,1.445a8.008,8.008,0,0,1-3.924-.932l-.692,3.236a11.566,11.566,0,0,0,4.25.785c4.013,0,6.639-1.983,6.651-5.053m9.973,4.823h3.534L44.9.26H41.638a1.74,1.74,0,0,0-1.626,1.084L34.278,15.031H38.29l.8-2.207h4.9ZM40.188,9.8,42.2,4.25,43.357,9.8ZM24.112.26,20.953,15.031H17.132L20.293.26h3.819Z" transform="translate(9.266 6.629)" fill="url(#linear-gradient)"/>
+</svg>

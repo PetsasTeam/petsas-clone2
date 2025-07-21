@@ -18,9 +18,7 @@ async function getVehicleData(): Promise<Vehicle[]> {
     },
     orderBy: [
       {
-        category: {
-          displayOrder: 'asc' // Order by category display order first
-        }
+        group: 'asc' // Order by vehicle group alphabetically
       },
       {
         name: 'asc' // Then by vehicle name

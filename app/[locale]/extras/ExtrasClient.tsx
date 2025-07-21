@@ -302,7 +302,7 @@ const ExtrasClient: React.FC<ExtrasClientProps> = ({
     }
   };
 
-  // Handle continue to booking
+  // Handle continue to review and pay
   const handleContinue = () => {
     const extrasParams = new URLSearchParams();
     
@@ -325,13 +325,13 @@ const ExtrasClient: React.FC<ExtrasClientProps> = ({
       extrasParams.set('promoDiscount', appliedPromotion.discount.toString());
     }
 
-    // Add pricing breakdown for booking page
+    // Add pricing breakdown for review and pay page
     extrasParams.set('basePrice', getBaseVehiclePrice().toString());
     extrasParams.set('discountedPrice', getDiscountedVehiclePrice().toString());
     extrasParams.set('extrasTotal', totalExtrasCost.toString());
     extrasParams.set('totalAmount', (getDiscountedVehiclePrice() - getPromotionalDiscount() + totalExtrasCost).toString());
 
-    window.location.href = `/en/booking?${extrasParams.toString()}`;
+    router.push(`/en/review-and-pay?${extrasParams.toString()}`);
   };
 
   // Navigation functions for progress steps
@@ -354,37 +354,39 @@ const ExtrasClient: React.FC<ExtrasClientProps> = ({
       {/* Progress Steps */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              {/* Step 1 - Search (Clickable) */}
+          <div className="flex items-center justify-center space-x-8">
+            {/* Step 1 - Search (Completed) */}
               <button
                 onClick={goToSearch}
                 className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-2 transition-colors cursor-pointer"
               >
-                <div className="bg-yellow-500 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+              <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                   1
                 </div>
-                <span className="font-semibold text-gray-900">Search</span>
+              <span className="font-medium text-gray-900">Search</span>
               </button>
+            <div className="w-16 h-0.5 bg-blue-600"></div>
               
-              {/* Step 2 - Choose Vehicle (Clickable) */}
+            {/* Step 2 - Choose Vehicle (Completed) */}
               <button
                 onClick={goToVehicleSelection}
                 className="flex items-center space-x-2 hover:bg-gray-50 rounded-lg p-2 transition-colors cursor-pointer"
               >
-                <div className="bg-yellow-500 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+              <div className="bg-blue-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                   2
                 </div>
-                <span className="font-semibold text-gray-900">Choose vehicle</span>
+              <span className="font-medium text-gray-900">Choose vehicle</span>
               </button>
+            <div className="w-16 h-0.5 bg-blue-600"></div>
               
               {/* Step 3 - Choose Extras (Current) */}
               <div className="flex items-center space-x-2">
-                <div className="bg-teal-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
+              <div className="bg-yellow-500 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
                   3
-                </div>
-                <span className="font-semibold text-white bg-teal-600 px-3 py-1 rounded">Choose extras</span>
               </div>
+              <span className="font-medium text-yellow-600">Choose extras</span>
+            </div>
+            <div className="w-16 h-0.5 bg-gray-300"></div>
               
               {/* Step 4 - Review and Pay (Future) */}
               <div className="flex items-center space-x-2">
@@ -392,7 +394,6 @@ const ExtrasClient: React.FC<ExtrasClientProps> = ({
                   4
                 </div>
                 <span className="text-gray-600">Review and Pay</span>
-              </div>
             </div>
           </div>
         </div>
@@ -782,7 +783,7 @@ const ExtrasClient: React.FC<ExtrasClientProps> = ({
                   onClick={handleContinue}
                   className="w-full bg-teal-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-teal-700 transition-colors"
                 >
-                  Continue to Booking
+                  Continue to Review & Pay
                 </button>
                 <button
                   onClick={() => router.back()}

@@ -1,24 +1,61 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function CustomerLoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const message = searchParams.get('message');
+    if (message) {
+      setSuccess(message);
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError("");
-    // TODO: Implement login logic (API call)
-    setTimeout(() => {
+    setSuccess("");
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        // Store customer data in localStorage for now (later we'll use proper session management)
+        localStorage.setItem('customer', JSON.stringify(data.customer));
+        
+        // Redirect to home page or where they came from
+        const returnUrl = searchParams.get('returnUrl') || '/en';
+        window.location.href = returnUrl;
+      } else {
+        setError(data.message || 'Login failed');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      setError('Network error. Please try again.');
+    } finally {
       setLoading(false);
-      setError("Invalid email or password"); // Demo error
-    }, 1200);
+    }
   };
 
   return (
@@ -64,6 +101,7 @@ export default function CustomerLoginPage() {
             </div>
           </div>
           {error && <div className="text-red-600 text-sm text-center">{error}</div>}
+          {success && <div className="text-green-600 text-sm text-center">{success}</div>}
           <button
             type="submit"
             className="w-full py-3 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-xl transition"

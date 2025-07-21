@@ -1,7 +1,7 @@
 generator client {
   provider      = "prisma-client-js"
   output        = "../app/generated/prisma"
-  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x", "debian-openssl-3.0.x"]
 }
 
 datasource db {
@@ -27,14 +27,14 @@ model Vehicle {
   engineSize    String
   doors         Int
   seats         Int
-  adults        Int?
-  children      Int?
   transmission  String
   bigLuggages   Int
   smallLuggages Int
   hasAC         Boolean
   categoryId    String
   visible       Boolean         @default(true)
+  adults        Int?
+  children      Int?
   bookings      Booking[]
   category      VehicleCategory @relation(fields: [categoryId], references: [id])
 }
@@ -56,6 +56,9 @@ model SeasonalPricing {
   price3to6Days   Float
   price7to14Days  Float
   price15PlusDays Float
+  basePrice3to6Days   Float?
+  basePrice7to14Days  Float?
+  basePrice15PlusDays Float?
   category        VehicleCategory @relation(fields: [categoryId], references: [id])
   season          Season          @relation(fields: [seasonId], references: [id])
 
@@ -118,33 +121,37 @@ model Location {
 }
 
 model Customer {
-  id        String    @id @default(cuid())
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  firstName String
-  lastName  String
-  email     String    @unique
-  phone     String
-  bookings  Booking[]
+  id          String    @id @default(cuid())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  firstName   String
+  lastName    String
+  email       String    @unique
+  phone       String
+  address     String?
+  dateOfBirth DateTime?
+  password    String?
+  verified    Boolean   @default(false)
+  bookings    Booking[]
 }
 
 model Promotion {
-  id          String   @id @default(cuid())
-  name        String
-  code        String   @unique
-  discount    Float
-  startDate   DateTime
-  endDate     DateTime
-  visible     Boolean  @default(true)
-  type        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  name      String
+  code      String   @unique
+  discount  Float
+  startDate DateTime
+  endDate   DateTime
+  visible   Boolean  @default(true)
+  type      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Booking {
-  id            String   @id @default(cuid())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id            String       @id @default(cuid())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   startDate     DateTime
   endDate       DateTime
   totalPrice    Float
@@ -152,62 +159,113 @@ model Booking {
   customerId    String
   vehicleId     String
   invoiceNo     String?
-  paymentStatus String   @default("Pending")
-  paymentType   String   @default("On Arrival")
-  transactionId String?
-  customer      Customer @relation(fields: [customerId], references: [id])
-  vehicle       Vehicle  @relation(fields: [vehicleId], references: [id])
+  orderNumber   String?      // Order number for JCC payment (e.g., "cmd5ko5f75209123")
+  paymentStatus String       @default("Pending")
+  paymentType   String       @default("On Arrival")
+  transactionId String?      // JCC Order ID (e.g., "574d18c8-f83a-7fac-94cf-db332ec596c8")
+  customer      Customer     @relation(fields: [customerId], references: [id])
+  vehicle       Vehicle      @relation(fields: [vehicleId], references: [id])
+  paymentLogs   PaymentLog[]
 }
 
 model GeneralSetting {
-  id                        String   @id @default(cuid())
-  maxRowsPerPage           Int      @default(500)
-  vatPercentage            Float    @default(19.0)
-  payOnArrivalDiscount     Float    @default(10.0)
-  payOnlineDiscount        Float    @default(15.0)
-  nextInvoiceNumber        String   @default("14312")
-  createdAt                DateTime @default(now())
-  updatedAt                DateTime @updatedAt
-  contactEmail             String?
-  contactPhone             String?
-  socialFacebook           String?
-  socialInstagram          String?
-  socialLinkedin           String?
-  socialTwitter            String?
-  glassmorphismEnabled     Boolean  @default(true)
+  id                   String   @id @default(cuid())
+  maxRowsPerPage       Int      @default(500)
+  vatPercentage        Float    @default(19.0)
+  payOnArrivalDiscount Float    @default(10.0)
+  payOnlineDiscount    Float    @default(15.0)
+  nextInvoiceNumber    String   @default("1")
+  nextOrderNumber      String   @default("1")      // Sequential order number counter (K000001, K000002, etc.)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  contactEmail         String?
+  contactPhone         String?
+  glassmorphismEnabled Boolean  @default(true)
+  socialFacebook       String?
+  socialInstagram      String?
+  socialLinkedin       String?
+  socialTwitter        String?
 }
 
 model Post {
   id          String   @id @default(cuid())
   slug        String   @unique
-  slugRu      String?  @unique // Russian URL slug
   title       String
-  titleRu     String?  // Russian title
-  summary     String?  @db.Text // Summary for preview
-  summaryRu   String?  @db.Text // Russian summary
-  content     String   @db.Text
-  contentRu   String?  @db.Text // Russian content
+  content     String
   imageUrl    String?
   published   Boolean  @default(false)
-  publishedRu Boolean  @default(false) // Separate publish status for Russian
-  category    String?  // Simple category string for now
-  readTime    Int?     // Estimated read time in minutes
-  featured    Boolean  @default(false) // Featured posts
-  views       Int      @default(0) // View count
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  contentRu   String?
+  publishedRu Boolean  @default(false)
+  slugRu      String?  @unique
+  summary     String?
+  summaryRu   String?
+  titleRu     String?
+  featured    Boolean  @default(false)
+  readTime    Int?
+  views       Int      @default(0)
+  category    String?
+  tags        String[]
 }
 
 model SiteContent {
-  id        String    @id @default(cuid())
-  key       String    @unique // e.g., 'home_hero_image', 'promo_banner_1'
-  type      String    // 'image', 'text', 'link'
-  value     String    @db.Text
-  altText   String?   // For images
-  linkUrl   String?   // For banners or other linked content
-  group     String    // To group content in the admin UI, e.g. 'Homepage'
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  key       String   @unique
+  type      String
+  value     String
+  altText   String?
+  linkUrl   String?
+  group     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-
+model PaymentLog {
+  id                String   @id @default(cuid())
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  // Basic payment info
+  bookingId         String?
+  orderId           String?  // JCC order ID
+  orderNumber       String?  // Our internal order number
+  amount            Float
+  currency          String   @default("EUR")
+  
+  // Customer info (for failed payments where booking might not exist)
+  customerEmail     String?
+  customerFirstName String?
+  customerLastName  String?
+  customerPhone     String?
+  
+  // Payment attempt details
+  paymentType       String   // "create_order" or "verify_payment"
+  status            String   // "success", "failed", "pending"
+  
+  // JCC response data
+  jccOrderId        String?  // JCC's order ID
+  jccStatus         String?  // JCC payment status (0, 1, 2)
+  jccErrorCode      String?  // JCC error code if failed
+  jccErrorMessage   String?  // JCC error message if failed
+  jccFormUrl        String?  // JCC payment form URL
+  
+  // Our processing details
+  attemptNumber     Int      @default(1)
+  processingTime    Int?     // Time taken in milliseconds
+  userAgent         String?
+  ipAddress         String?
+  
+  // Full response data for debugging
+  rawJccResponse    String?  // Full JCC API response
+  errorDetails      String?  // Our internal error details
+  
+  // Relations
+  booking           Booking? @relation(fields: [bookingId], references: [id])
+  
+  @@index([bookingId])
+  @@index([orderId])
+  @@index([customerEmail])
+  @@index([status])
+  @@index([createdAt])
+}

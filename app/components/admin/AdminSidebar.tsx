@@ -102,6 +102,11 @@ const AdminSidebar: React.FC = () => {
           title: 'Payment Tracking',
           href: '/admin/bookings/payments',
           icon: <FaCreditCard className="h-4 w-4" />
+        },
+        {
+          title: 'Payment Logs',
+          href: '/admin/payment-logs',
+          icon: <FaCreditCard className="h-4 w-4" />
         }
       ]
     },

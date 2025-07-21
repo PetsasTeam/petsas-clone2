@@ -6,9 +6,19 @@ import GlassmorphismControl from '../components/GlassmorphismControl';
 import { useTranslations } from 'next-intl';
 import { useRevealOnScroll } from '../components/useRevealOnScroll';
 
+interface Location {
+  id: string;
+  name: string;
+  type: string;
+  visible: boolean;
+  isPickupPoint: boolean;
+  isDropoffPoint: boolean;
+}
+
 interface HomePageClientProps {
   glassmorphismEnabled: boolean;
   heroImageUrl: string;
+  locations: Location[];
   promoBanners: ReactNode;
   blogPreview: ReactNode;
   infoBanners: ReactNode;
@@ -18,6 +28,7 @@ interface HomePageClientProps {
 export default function HomePageClient({ 
   glassmorphismEnabled, 
   heroImageUrl, 
+  locations,
   promoBanners, 
   blogPreview, 
   infoBanners, 
@@ -50,7 +61,7 @@ export default function HomePageClient({
               <button className="btn-tertiary">🛡️ ISO Certified</button>
             </div>
           </div>
-          <BookingForm />
+          <BookingForm locations={locations} />
         </div>
       </section>
       

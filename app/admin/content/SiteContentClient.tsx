@@ -215,18 +215,18 @@ export default function SiteContentClient({ contentItems }: SiteContentClientPro
                             item.value.replace(/<[^>]*>/g, '')
                           }
                         </div>
-                      )}
-                    </div>
+                    )}
+                  </div>
                     
                     <div className="flex space-x-2">
-                      <button
-                        onClick={() => handleEdit(item)}
+                    <button
+                      onClick={() => handleEdit(item)}
                         className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 transition-colors font-medium"
-                      >
+                    >
                         Edit Content
-                      </button>
-                    </div>
+                    </button>
                   </div>
+                </div>
                 );
               })}
             </div>

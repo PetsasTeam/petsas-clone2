@@ -379,10 +379,10 @@ export default function EditContentModal({ item, onClose }: EditContentModalProp
                           margin-bottom: 0.25rem;
                         }
                       `}</style>
-                      <ReactQuill
-                        theme="snow"
-                        value={formData.value}
-                        onChange={handleQuillChange}
+              <ReactQuill
+                theme="snow"
+                value={formData.value}
+                onChange={handleQuillChange}
                         modules={quillModules}
                         formats={quillFormats}
                         style={{ height: '350px', marginBottom: '50px' }}

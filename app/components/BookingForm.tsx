@@ -6,7 +6,21 @@ import { useRouter } from 'next/navigation';
 import Select from 'react-select';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
-import { Location } from '../admin/setup/locations/actions';
+
+// Types
+interface Location {
+  id: string;
+  name: string;
+  type: string;
+  visible: boolean;
+  isPickupPoint: boolean;
+  isDropoffPoint: boolean;
+}
+
+interface LocationOption {
+  value: string;
+  label: string;
+}
 
 interface BookingFormData {
   pickupLocation: string;
@@ -28,9 +42,47 @@ interface BookingFormProps {
   isCompact?: boolean;
   initialPickupLocations?: any[];
   initialDropoffLocations?: any[];
+  locations?: Location[];
 }
 
-const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
+// Server action to fetch locations
+async function getLocationOptions(): Promise<LocationOption[]> {
+  try {
+    const response = await fetch('/api/locations');
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch locations: ${response.status}`);
+    }
+    
+    const locations: Location[] = await response.json();
+    
+    const locationOptions: LocationOption[] = locations
+      .filter(loc => loc.visible)
+      .map(loc => ({
+        value: loc.id,
+        label: loc.name
+      }));
+    
+    // Add custom option at the end
+    locationOptions.push({ value: 'custom', label: 'Custom (Hotel or Address)' });
+    
+    return locationOptions;
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+    // Fallback to hardcoded locations
+    return [
+      { value: 'larnaka-airport', label: 'Larnaka Airport' },
+      { value: 'pafos-airport', label: 'Pafos Airport' },
+      { value: 'pafos-office', label: 'Pafos Office' },
+      { value: 'limassol-office', label: 'Limassol Office' },
+      { value: 'ayia-napa-office', label: 'Ayia Napa Office' },
+      { value: 'nicosia-office', label: 'Nicosia Office' },
+      { value: 'custom', label: 'Custom (Hotel or Address)' }
+    ];
+  }
+}
+
+const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations: propLocations }) => {
   const router = useRouter();
   const [formData, setFormData] = useState<BookingFormData>({
     pickupLocation: '',
@@ -48,15 +100,48 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
     dropoffCustomCity: ''
   });
 
-  const locations = [
-    { value: 'larnaka-airport', label: 'Larnaka Airport' },
-    { value: 'pafos-airport', label: 'Pafos Airport' },
-    { value: 'pafos-office', label: 'Pafos Office' },
-    { value: 'limassol-office', label: 'Limassol Office' },
-    { value: 'ayia-napa-office', label: 'Ayia Napa Office' },
-    { value: 'nicosia-office', label: 'Nicosia Office' },
-    { value: 'custom', label: 'Custom (Hotel or Address)' }
-  ];
+  const [locationOptions, setLocationOptions] = useState<LocationOption[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Load locations on component mount
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        if (propLocations) {
+          // Use provided locations
+          const options = propLocations
+            .filter(loc => loc.visible)
+            .map(loc => ({
+              value: loc.id,
+              label: loc.name
+            }));
+          options.push({ value: 'custom', label: 'Custom (Hotel or Address)' });
+          setLocationOptions(options);
+        } else {
+          // Fetch locations from API
+          const options = await getLocationOptions();
+          setLocationOptions(options);
+        }
+      } catch (error) {
+        console.error('Error loading locations:', error);
+        // Set fallback locations on error
+        const fallbackOptions = [
+          { value: 'larnaka-airport', label: 'Larnaka Airport' },
+          { value: 'pafos-airport', label: 'Pafos Airport' },
+          { value: 'pafos-office', label: 'Pafos Office' },
+          { value: 'limassol-office', label: 'Limassol Office' },
+          { value: 'ayia-napa-office', label: 'Ayia Napa Office' },
+          { value: 'nicosia-office', label: 'Nicosia Office' },
+          { value: 'custom', label: 'Custom (Hotel or Address)' }
+        ];
+        setLocationOptions(fallbackOptions);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadLocations();
+  }, [propLocations]);
 
   const cities = [
     { value: 'nicosia', label: 'Nicosia' },
@@ -80,7 +165,38 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
 
   const [validationError, setValidationError] = useState<string>('');
 
-  const validateBookingTime = () => {
+  const validateBookingForm = () => {
+    // Check pickup location
+    if (!formData.pickupLocation) {
+      setValidationError('Please select a pickup location.');
+      return false;
+    }
+
+    // Check custom pickup location details if custom is selected
+    if (formData.pickupLocation === 'custom') {
+      if (!formData.pickupCustomLocation || !formData.pickupCustomCity) {
+        setValidationError('Please enter custom pickup location and city.');
+        return false;
+      }
+    }
+
+    // Check dropoff location if different dropoff is enabled
+    if (formData.differentDropoff) {
+      if (!formData.dropoffLocation) {
+        setValidationError('Please select a dropoff location.');
+        return false;
+      }
+
+      // Check custom dropoff location details if custom is selected
+      if (formData.dropoffLocation === 'custom') {
+        if (!formData.dropoffCustomLocation || !formData.dropoffCustomCity) {
+          setValidationError('Please enter custom dropoff location and city.');
+          return false;
+        }
+      }
+    }
+
+    // Check pickup date
     if (!formData.pickupDate) {
       setValidationError('Please select a pickup date.');
       return false;
@@ -109,7 +225,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!validateBookingTime()) {
+    if (!validateBookingForm()) {
       return;
     }
     
@@ -120,7 +236,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
     if (formData.pickupLocation === 'custom' && formData.pickupCustomLocation && formData.pickupCustomCity) {
       searchParams.set('pickupLocation', `${formData.pickupCustomLocation}, ${formData.pickupCustomCity}`);
     } else if (formData.pickupLocation) {
-      const locationLabel = locations.find(loc => loc.value === formData.pickupLocation)?.label || formData.pickupLocation;
+      const locationLabel = locationOptions.find(loc => loc.value === formData.pickupLocation)?.label || formData.pickupLocation;
       searchParams.set('pickupLocation', locationLabel);
     }
     
@@ -129,7 +245,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
       if (formData.dropoffLocation === 'custom' && formData.dropoffCustomLocation && formData.dropoffCustomCity) {
         searchParams.set('dropoffLocation', `${formData.dropoffCustomLocation}, ${formData.dropoffCustomCity}`);
       } else if (formData.dropoffLocation) {
-        const locationLabel = locations.find(loc => loc.value === formData.dropoffLocation)?.label || formData.dropoffLocation;
+        const locationLabel = locationOptions.find(loc => loc.value === formData.dropoffLocation)?.label || formData.dropoffLocation;
         searchParams.set('dropoffLocation', locationLabel);
       }
     } else {
@@ -137,19 +253,28 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
       if (formData.pickupLocation === 'custom' && formData.pickupCustomLocation && formData.pickupCustomCity) {
         searchParams.set('dropoffLocation', `${formData.pickupCustomLocation}, ${formData.pickupCustomCity}`);
       } else if (formData.pickupLocation) {
-        const locationLabel = locations.find(loc => loc.value === formData.pickupLocation)?.label || formData.pickupLocation;
+        const locationLabel = locationOptions.find(loc => loc.value === formData.pickupLocation)?.label || formData.pickupLocation;
         searchParams.set('dropoffLocation', locationLabel);
       }
     }
     
-    // Add dates
+    // Add dates (using local timezone to prevent date shifting)
     if (formData.pickupDate) {
-      searchParams.set('pickupDate', formData.pickupDate.toISOString().split('T')[0]);
+      const year = formData.pickupDate.getFullYear();
+      const month = String(formData.pickupDate.getMonth() + 1).padStart(2, '0');
+      const day = String(formData.pickupDate.getDate()).padStart(2, '0');
+      searchParams.set('pickupDate', `${year}-${month}-${day}`);
     }
     if (formData.dropoffDate) {
-      searchParams.set('dropoffDate', formData.dropoffDate.toISOString().split('T')[0]);
+      const year = formData.dropoffDate.getFullYear();
+      const month = String(formData.dropoffDate.getMonth() + 1).padStart(2, '0');
+      const day = String(formData.dropoffDate.getDate()).padStart(2, '0');
+      searchParams.set('dropoffDate', `${year}-${month}-${day}`);
     } else if (formData.pickupDate) {
-      searchParams.set('dropoffDate', formData.pickupDate.toISOString().split('T')[0]);
+      const year = formData.pickupDate.getFullYear();
+      const month = String(formData.pickupDate.getMonth() + 1).padStart(2, '0');
+      const day = String(formData.pickupDate.getDate()).padStart(2, '0');
+      searchParams.set('dropoffDate', `${year}-${month}-${day}`);
     }
     
     // Add times
@@ -157,7 +282,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
     searchParams.set('dropoffTime', `${formData.dropoffHour}:${formData.dropoffMinute}`);
     
     // Navigate to search page
-    router.push(`/search?${searchParams.toString()}`);
+    router.push(`/en/search?${searchParams.toString()}`);
   };
 
   const handleDifferentDropoffChange = (checked: boolean) => {
@@ -193,11 +318,20 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
       const cityLabel = cities.find(city => city.value === customCity)?.label || customCity;
       return `${customLocation} (${cityLabel})`;
     }
-    return locations.find(loc => loc.value === location)?.label || 'Same as pickup location';
+    return locationOptions.find(loc => loc.value === location)?.label || 'Same as pickup location';
   };
 
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'));
   const minutes = Array.from({ length: 12 }, (_, i) => (i * 5).toString().padStart(2, '0'));
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="form-container">
+        <div className="loading-spinner">Loading locations...</div>
+      </div>
+    );
+  }
 
   if (isCompact) {
     return (
@@ -210,7 +344,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
             onChange={(e) => handlePickupLocationChange(e.target.value)}
           >
             <option value="">Select pickup location</option>
-            {locations.map(loc => (
+            {locationOptions.map(loc => (
               <option key={loc.value} value={loc.value}>{loc.label}</option>
             ))}
           </select>
@@ -259,7 +393,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
               onChange={(e) => handleDropoffLocationChange(e.target.value)}
             >
               <option value="">Select drop-off location</option>
-              {locations.map(loc => (
+              {locationOptions.map(loc => (
                 <option key={loc.value} value={loc.value}>{loc.label}</option>
               ))}
             </select>
@@ -494,19 +628,19 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
             line-height: 32px;
           }
           :global(.react-datepicker__day:hover) {
-            background-color: #ffc107;
-            color: #003366;
+            background-color: #f0fdf4;
+            color: #047857;
           }
           :global(.react-datepicker__day--selected) {
-            background-color: #003366;
+            background-color: #059669;
             color: white;
           }
           :global(.react-datepicker__day--selected:hover) {
-            background-color: #002244;
+            background-color: #047857;
           }
           :global(.react-datepicker__day--today) {
-            background-color: #e6f3ff;
-            color: #003366;
+            background-color: #dcfce7;
+            color: #047857;
             font-weight: 600;
           }
           :global(.react-datepicker__day--disabled) {
@@ -542,9 +676,13 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
               onChange={(e) => handlePickupLocationChange(e.target.value)}
             >
               <option value="">Select pickup location</option>
-              {locations.map(loc => (
-                <option key={loc.value} value={loc.value}>{loc.label}</option>
-              ))}
+              {locationOptions.length > 0 ? (
+                locationOptions.map(loc => (
+                  <option key={loc.value} value={loc.value}>{loc.label}</option>
+                ))
+              ) : (
+                <option value="" disabled>Loading locations...</option>
+              )}
             </select>
             
             {/* Custom pickup location fields */}
@@ -639,7 +777,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false }) => {
                     onChange={(e) => handleDropoffLocationChange(e.target.value)}
                   >
                     <option value="">Select drop-off location</option>
-                    {locations.map(loc => (
+                    {locationOptions.map(loc => (
                       <option key={loc.value} value={loc.value}>{loc.label}</option>
                     ))}
                   </select>

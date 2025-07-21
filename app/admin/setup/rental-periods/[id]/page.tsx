@@ -45,6 +45,9 @@ async function getCategoriesWithPricing(seasonId: string): Promise<SeasonalPrici
                             price3to6Days: 0,
                             price7to14Days: 0,
                             price15PlusDays: 0,
+                            basePrice3to6Days: 0,
+                            basePrice7to14Days: 0,
+                            basePrice15PlusDays: 0,
                         },
                     })
                 );

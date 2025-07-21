@@ -85,7 +85,23 @@ async function getSearchResults(searchParams: SearchParams) {
       console.error("Failed to fetch general settings:", error);
     }
 
-    return { categories, currentSeason, searchParams, generalSettings };
+    // Get locations for the search dropdowns
+    const locations = await prisma.location.findMany({
+      where: { 
+        visible: true 
+      },
+      orderBy: { displayOrder: 'asc' },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        visible: true,
+        isPickupPoint: true,
+        isDropoffPoint: true,
+      }
+    });
+
+    return { categories, currentSeason, searchParams, generalSettings, locations };
   } catch (error) {
     console.error("Database query failed:", error);
     throw new Error("Failed to load search results");
@@ -93,7 +109,7 @@ async function getSearchResults(searchParams: SearchParams) {
 }
 
 export default async function SearchPage({ searchParams }: Props) {
-  const { categories, currentSeason, searchParams: params, generalSettings } = await getSearchResults(searchParams);
+  const { categories, currentSeason, searchParams: params, generalSettings, locations } = await getSearchResults(searchParams);
   
   return (
     <SearchPageClient 
@@ -101,6 +117,7 @@ export default async function SearchPage({ searchParams }: Props) {
       currentSeason={currentSeason} 
       searchParams={params} 
       generalSettings={generalSettings}
+      locations={locations}
     />
   );
 } 

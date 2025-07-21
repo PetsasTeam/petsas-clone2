@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import React from "react";
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -444,6 +444,67 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
   const [pickupTime, setPickupTime] = useState(searchParams.pickupTime || '09:00');
   const [dropoffTime, setDropoffTime] = useState(searchParams.dropoffTime || '09:00');
   const [differentDropoff, setDifferentDropoff] = useState(false);
+  const [locationOptions, setLocationOptions] = useState<Array<{value: string, label: string}>>([]);
+  
+  // Custom location states
+  const [pickupCustomCity, setPickupCustomCity] = useState('');
+  const [pickupCustomLocation, setPickupCustomLocation] = useState('');
+  const [dropoffCustomCity, setDropoffCustomCity] = useState('');
+  const [dropoffCustomLocation, setDropoffCustomLocation] = useState('');
+
+  // Load location options
+  useEffect(() => {
+    const loadLocations = async () => {
+      try {
+        const response = await fetch('/api/locations');
+        if (response.ok) {
+          const locations = await response.json();
+          const options = locations
+            .filter((loc: any) => loc.visible)
+            .map((loc: any) => ({
+              value: loc.id,
+              label: loc.name
+            }));
+          options.push({ value: 'custom', label: 'Custom (Hotel or Address)' });
+          setLocationOptions(options);
+        } else {
+          // Fallback locations
+          setLocationOptions([
+            { value: 'larnaka-airport', label: 'Larnaka Airport' },
+            { value: 'pafos-airport', label: 'Pafos Airport' },
+            { value: 'pafos-office', label: 'Pafos Office' },
+            { value: 'limassol-office', label: 'Limassol Office' },
+            { value: 'ayia-napa-office', label: 'Ayia Napa Office' },
+            { value: 'nicosia-office', label: 'Nicosia Office' },
+            { value: 'custom', label: 'Custom (Hotel or Address)' }
+          ]);
+        }
+      } catch (error) {
+        console.error('Error loading locations:', error);
+        // Fallback locations
+        setLocationOptions([
+          { value: 'larnaka-airport', label: 'Larnaka Airport' },
+          { value: 'pafos-airport', label: 'Pafos Airport' },
+          { value: 'pafos-office', label: 'Pafos Office' },
+          { value: 'limassol-office', label: 'Limassol Office' },
+          { value: 'ayia-napa-office', label: 'Ayia Napa Office' },
+          { value: 'nicosia-office', label: 'Nicosia Office' },
+          { value: 'custom', label: 'Custom (Hotel or Address)' }
+        ]);
+      }
+    };
+
+    loadLocations();
+  }, []);
+
+  // Cities for custom location selection
+  const cities = [
+    { value: 'nicosia', label: 'Nicosia' },
+    { value: 'larnaca', label: 'Larnaca' },
+    { value: 'limassol', label: 'Limassol' },
+    { value: 'paphos', label: 'Paphos' },
+    { value: 'ayia-napa-protaras', label: 'Ayia Napa/Protaras' }
+  ];
 
   // Update dropoff location if not different
   React.useEffect(() => {
@@ -454,11 +515,40 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
 
   // Handler for search button
   const handleSearch = () => {
-    // 24-hour validation
+    // Location validation
+    if (!pickupLocation || pickupLocation.trim() === '') {
+      setValidationError('Please enter a pickup location.');
+      return;
+    }
+
+    // Check custom pickup location details if custom is selected
+    if (pickupLocation === 'Custom (Hotel or Address)') {
+      if (!pickupCustomLocation || !pickupCustomCity) {
+        setValidationError('Please enter custom pickup location and city.');
+        return;
+      }
+    }
+    
+    if (differentDropoff && (!dropoffLocation || dropoffLocation.trim() === '')) {
+      setValidationError('Please enter a dropoff location.');
+      return;
+    }
+
+    // Check custom dropoff location details if custom is selected
+    if (differentDropoff && dropoffLocation === 'Custom (Hotel or Address)') {
+      if (!dropoffCustomLocation || !dropoffCustomCity) {
+        setValidationError('Please enter custom dropoff location and city.');
+        return;
+      }
+    }
+
+    // Date validation
     if (!pickupDate) {
       setValidationError('Please select a pickup date.');
       return;
     }
+
+    // 24-hour validation
     const [pickupHour, pickupMinute] = pickupTime.split(':').map(Number);
     const pickupDateTime = new Date(pickupDate);
     pickupDateTime.setHours(pickupHour, pickupMinute, 0, 0);
@@ -470,13 +560,33 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
     }
     setValidationError('');
     const params = new URLSearchParams();
-    params.set('pickupLocation', pickupLocation);
-    params.set('dropoffLocation', dropoffLocation);
+    
+    // Handle pickup location
+    if (pickupLocation === 'Custom (Hotel or Address)' && pickupCustomLocation && pickupCustomCity) {
+      const cityLabel = cities.find(city => city.value === pickupCustomCity)?.label || pickupCustomCity;
+      params.set('pickupLocation', `${pickupCustomLocation}, ${cityLabel}`);
+    } else {
+      params.set('pickupLocation', pickupLocation);
+    }
+    
+    // Handle dropoff location  
+    if (dropoffLocation === 'Custom (Hotel or Address)' && dropoffCustomLocation && dropoffCustomCity) {
+      const cityLabel = cities.find(city => city.value === dropoffCustomCity)?.label || dropoffCustomCity;
+      params.set('dropoffLocation', `${dropoffCustomLocation}, ${cityLabel}`);
+    } else {
+      params.set('dropoffLocation', dropoffLocation);
+    }
     if (pickupDate) {
-      params.set('pickupDate', pickupDate.toISOString().split('T')[0]);
+      const year = pickupDate.getFullYear();
+      const month = String(pickupDate.getMonth() + 1).padStart(2, '0');
+      const day = String(pickupDate.getDate()).padStart(2, '0');
+      params.set('pickupDate', `${year}-${month}-${day}`);
     }
     if (dropoffDate) {
-      params.set('dropoffDate', dropoffDate.toISOString().split('T')[0]);
+      const year = dropoffDate.getFullYear();
+      const month = String(dropoffDate.getMonth() + 1).padStart(2, '0');
+      const day = String(dropoffDate.getDate()).padStart(2, '0');
+      params.set('dropoffDate', `${year}-${month}-${day}`);
     }
     params.set('pickupTime', pickupTime);
     params.set('dropoffTime', dropoffTime);
@@ -554,13 +664,40 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
                         <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <input
-                            placeholder="Enter pickup location"
+                          <select
                             className="pl-10 h-12 w-full border border-gray-300 rounded-md px-3 py-2"
                             value={pickupLocation}
                             onChange={e => setPickupLocation(e.target.value)}
-                          />
+                          >
+                            <option value="">Select pickup location</option>
+                            {locationOptions.map(loc => (
+                              <option key={loc.value} value={loc.label}>{loc.label}</option>
+                            ))}
+                          </select>
                         </div>
+                        
+                        {/* Custom pickup location fields */}
+                        {pickupLocation === 'Custom (Hotel or Address)' && (
+                          <div className="space-y-2 mt-2">
+                            <select 
+                              className="h-12 w-full border border-gray-300 rounded-md px-3 py-2"
+                              value={pickupCustomCity}
+                              onChange={(e) => setPickupCustomCity(e.target.value)}
+                            >
+                              <option value="">Select city/area</option>
+                              {cities.map(city => (
+                                <option key={city.value} value={city.value}>{city.label}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="text"
+                              className="h-12 w-full border border-gray-300 rounded-md px-3 py-2"
+                              placeholder="Enter hotel name or address"
+                              value={pickupCustomLocation}
+                              onChange={(e) => setPickupCustomLocation(e.target.value)}
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="grid grid-cols-3 gap-2">
                         <div>
@@ -619,14 +756,41 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
                         <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                         <div className="relative">
                           <MapPin className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                          <input
-                            placeholder="Enter drop-off location"
+                          <select
                             className="pl-10 h-12 w-full border border-gray-300 rounded-md px-3 py-2"
                             value={dropoffLocation}
                             onChange={e => setDropoffLocation(e.target.value)}
                             disabled={!differentDropoff}
-                          />
+                          >
+                            <option value="">Select dropoff location</option>
+                            {locationOptions.map(loc => (
+                              <option key={loc.value} value={loc.label}>{loc.label}</option>
+                            ))}
+                          </select>
                         </div>
+                        
+                        {/* Custom dropoff location fields */}
+                        {dropoffLocation === 'Custom (Hotel or Address)' && differentDropoff && (
+                          <div className="space-y-2 mt-2">
+                            <select 
+                              className="h-12 w-full border border-gray-300 rounded-md px-3 py-2"
+                              value={dropoffCustomCity}
+                              onChange={(e) => setDropoffCustomCity(e.target.value)}
+                            >
+                              <option value="">Select city/area</option>
+                              {cities.map(city => (
+                                <option key={city.value} value={city.value}>{city.label}</option>
+                              ))}
+                            </select>
+                            <input
+                              type="text"
+                              className="h-12 w-full border border-gray-300 rounded-md px-3 py-2"
+                              placeholder="Enter hotel name or address"
+                              value={dropoffCustomLocation}
+                              onChange={(e) => setDropoffCustomLocation(e.target.value)}
+                            />
+                          </div>
+                        )}
                       </div>
                       <div className="grid grid-cols-3 gap-2">
                         <div>
@@ -681,36 +845,29 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
       </div>
 
       {/* Progress Steps */}
-      <div className="bg-white border-b">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-8">
-              <div className="flex items-center space-x-2">
-                <div className="bg-yellow-500 text-black rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                  1
+          <div className="flex items-center justify-center space-x-8">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
+              <span className="ml-2 text-sm font-medium text-gray-900">Search</span>
                 </div>
-                <span className="font-semibold text-gray-900">Search</span>
+            <div className="w-16 h-0.5 bg-blue-600"></div>
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
+              <span className="ml-2 text-sm font-medium text-yellow-600">Choose vehicle</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="bg-teal-600 text-white rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                  2
+            <div className="w-16 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold">3</div>
+              <span className="ml-2 text-sm text-gray-600">Choose extras</span>
                 </div>
-                <span className="font-semibold text-white bg-teal-600 px-3 py-1 rounded">Choose vehicle</span>
+            <div className="w-16 h-0.5 bg-gray-300"></div>
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gray-300 text-gray-600 rounded-full flex items-center justify-center text-sm font-bold">4</div>
+              <span className="ml-2 text-sm text-gray-600">Review and Pay</span>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="bg-gray-300 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                  3
                 </div>
-                <span className="text-gray-600">Choose extras</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="bg-gray-300 text-gray-600 rounded-full w-8 h-8 flex items-center justify-center font-bold text-sm">
-                  4
-                </div>
-                <span className="text-gray-600">Review and Pay</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -751,14 +908,42 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
                     <Car className="h-4 w-4 text-teal-600" />
                     <label className="text-sm font-medium text-gray-700">Pickup</label>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    <input
-                      type="text"
-                      placeholder="Location"
+                  <div className="space-y-2">
+                    <select
                       className="h-10 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                       value={pickupLocation}
                       onChange={e => setPickupLocation(e.target.value)}
-                    />
+                    >
+                      <option value="">Select pickup location</option>
+                      {locationOptions.map(loc => (
+                        <option key={loc.value} value={loc.label}>{loc.label}</option>
+                      ))}
+                    </select>
+                    
+                    {/* Custom pickup location fields */}
+                    {pickupLocation === 'Custom (Hotel or Address)' && (
+                      <div className="space-y-2">
+                        <select 
+                          className="h-10 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                          value={pickupCustomCity}
+                          onChange={(e) => setPickupCustomCity(e.target.value)}
+                        >
+                          <option value="">Select city/area</option>
+                          {cities.map(city => (
+                            <option key={city.value} value={city.value}>{city.label}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          className="h-10 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                          placeholder="Enter hotel name or address"
+                          value={pickupCustomLocation}
+                          onChange={(e) => setPickupCustomLocation(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
                     <div className="date-picker-wrapper">
                       <DatePicker
                         selected={pickupDate}
@@ -799,14 +984,42 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
                     <MapPin className="h-4 w-4 text-teal-600" />
                     <label className="text-sm font-medium text-gray-700">Dropoff</label>
                   </div>
-                  <div className="grid grid-cols-4 gap-2">
-                    <input
-                      type="text"
-                      placeholder="Location"
+                  <div className="space-y-2">
+                    <select
                       className="h-10 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
                       value={dropoffLocation}
                       onChange={e => setDropoffLocation(e.target.value)}
-                    />
+                    >
+                      <option value="">Select dropoff location</option>
+                      {locationOptions.map(loc => (
+                        <option key={loc.value} value={loc.label}>{loc.label}</option>
+                      ))}
+                    </select>
+                    
+                    {/* Custom dropoff location fields */}
+                    {dropoffLocation === 'Custom (Hotel or Address)' && (
+                      <div className="space-y-2">
+                        <select 
+                          className="h-10 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                          value={dropoffCustomCity}
+                          onChange={(e) => setDropoffCustomCity(e.target.value)}
+                        >
+                          <option value="">Select city/area</option>
+                          {cities.map(city => (
+                            <option key={city.value} value={city.value}>{city.label}</option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          className="h-10 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                          placeholder="Enter hotel name or address"
+                          value={dropoffCustomLocation}
+                          onChange={(e) => setDropoffCustomLocation(e.target.value)}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
                     <div className="date-picker-wrapper">
                       <DatePicker
                         selected={dropoffDate}
@@ -897,6 +1110,38 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
         {/* Vehicle Results - Sorted by Price */}
         <div className="grid grid-cols-1 gap-6">
           {(() => {
+            // Check if no season is available for selected dates
+            if (!currentSeason) {
+              return (
+                <div className="col-span-full">
+                  <div className="bg-amber-50 border-l-4 border-amber-400 rounded-lg p-6">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h3 className="text-lg font-semibold text-amber-800 mb-2">No vehicles available for these dates</h3>
+                        <p className="text-amber-700 text-sm mb-3">
+                          We don't have pricing configured for <strong>{searchParams.pickupDate ? new Date(searchParams.pickupDate).toLocaleDateString('en-GB') : ''}</strong> to <strong>{searchParams.dropoffDate ? new Date(searchParams.dropoffDate).toLocaleDateString('en-GB') : ''}</strong>.
+                        </p>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-amber-600">💡 Try adjusting your dates above or</span>
+                          <a
+                            href="/en/contact"
+                            className="text-amber-700 font-medium hover:text-amber-800 underline"
+                          >
+                            contact us for assistance
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
             // Flatten all vehicles from all categories and calculate prices
             const allVehicles = filteredCategories.flatMap((category: any) => 
               category.vehicles.map((vehicle: any) => {
@@ -908,6 +1153,16 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
                 );
 
                 if (!vehiclePricing) {
+                  return null;
+                }
+
+                // Check if pricing has valid values (not zero)
+                const hasValidPricingData = 
+                  vehiclePricing.price3to6Days > 0 || 
+                  vehiclePricing.price7to14Days > 0 || 
+                  vehiclePricing.price15PlusDays > 0;
+                
+                if (!hasValidPricingData) {
                   return null;
                 }
 
@@ -933,8 +1188,54 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
               }).filter(Boolean) // Remove null values
             );
 
-            // Sort by price (cheapest first)
-            const sortedVehicles = allVehicles.sort((a: any, b: any) => a.sortPrice - b.sortPrice);
+            // Check if all vehicles have zero prices
+            const hasValidPrices = allVehicles.some((vehicleData: any) => {
+              const isValid = vehicleData.basePrice > 0 && vehicleData.onlinePrice > 0 && vehicleData.arrivalPrice > 0;
+              return isValid;
+            });
+            
+            if (allVehicles.length === 0 || !hasValidPrices) {
+              return (
+                <div className="col-span-full">
+                  <div className="bg-blue-50 border-l-4 border-blue-400 rounded-lg p-6">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                      </div>
+                      <div className="ml-4 flex-1">
+                        <h3 className="text-lg font-semibold text-blue-800 mb-2">No vehicles available</h3>
+                        <p className="text-blue-700 text-sm mb-3">
+                          {allVehicles.length === 0 
+                            ? "We don't have vehicles configured for the selected dates."
+                            : "Pricing is not yet available for your selected dates."
+                          }
+                        </p>
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="text-blue-600">💡 Try adjusting your search criteria above or</span>
+                          <a
+                            href="/en/contact"
+                            className="text-blue-700 font-medium hover:text-blue-800 underline"
+                          >
+                            contact us for assistance
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+
+            // Sort by price (cheapest first), then by group alphabetically if prices are equal
+            const sortedVehicles = allVehicles.sort((a: any, b: any) => {
+              if (a.sortPrice !== b.sortPrice) {
+                return a.sortPrice - b.sortPrice;
+              }
+              // If prices are equal, sort by group alphabetically
+              return a.vehicle.group.localeCompare(b.vehicle.group);
+            });
 
             return sortedVehicles.map((vehicleData: any) => (
               <VehicleCard 

@@ -7,10 +7,11 @@ async function getGeneralSettings() {
   const settings = await prisma.generalSetting.findFirst();
   return settings || {
     maxRowsPerPage: 500,
-    vat: 19.00,
+    vatPercentage: 19.00,
     payOnArrivalDiscount: 10.00,
     payOnlineDiscount: 15.00,
-    nextInvoiceNumber: 14312,
+    nextInvoiceNumber: 1,
+    nextOrderNumber: 1,
     glassmorphismEnabled: true,
   };
 }
