@@ -80,12 +80,23 @@ function VehicleCard({ vehicle, onlinePrice, arrivalPrice, days, generalSettings
 
   // Handler for book now button
   const handleBookNow = (paymentType: 'online' | 'arrival') => {
+    // Validate required fields before proceeding
+    if (!searchParams.pickupLocation || !searchParams.dropoffLocation) {
+      alert('Pickup and drop-off locations are required. Please start from the vehicle selection page.');
+      return;
+    }
+    
+    if (!searchParams.pickupDate || !searchParams.dropoffDate) {
+      alert('Pickup and drop-off dates are required. Please start from the vehicle selection page.');
+      return;
+    }
+    
     const params = new URLSearchParams();
     params.set('vehicleId', vehicle.id);
-    params.set('pickupLocation', searchParams.pickupLocation || '');
-    params.set('dropoffLocation', searchParams.dropoffLocation || '');
-    params.set('pickupDate', searchParams.pickupDate || '');
-    params.set('dropoffDate', searchParams.dropoffDate || '');
+    params.set('pickupLocation', searchParams.pickupLocation);
+    params.set('dropoffLocation', searchParams.dropoffLocation);
+    params.set('pickupDate', searchParams.pickupDate);
+    params.set('dropoffDate', searchParams.dropoffDate);
     params.set('pickupTime', searchParams.pickupTime || '09:00');
     params.set('dropoffTime', searchParams.dropoffTime || '09:00');
     params.set('days', days.toString());
@@ -497,6 +508,26 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
     loadLocations();
   }, []);
 
+  // Sync state with searchParams when they change
+  useEffect(() => {
+    setPickupLocation(searchParams.pickupLocation || 'Larnaka Airport');
+    setDropoffLocation(searchParams.dropoffLocation || 'Larnaka Airport');
+    setPickupDate(searchParams.pickupDate ? new Date(searchParams.pickupDate) : null);
+    setDropoffDate(searchParams.dropoffDate ? new Date(searchParams.dropoffDate) : null);
+    setPickupTime(searchParams.pickupTime || '09:00');
+    setDropoffTime(searchParams.dropoffTime || '09:00');
+    
+    // Set different dropoff based on whether pickup and dropoff locations are different
+    const isDifferentDropoff = searchParams.pickupLocation !== searchParams.dropoffLocation;
+    setDifferentDropoff(isDifferentDropoff);
+    
+    // Reset validation error when search params change
+    setValidationError('');
+    
+    // Close edit mode when search params change (new search completed)
+    setIsEditingSearch(false);
+  }, [searchParams]);
+
   // Cities for custom location selection
   const cities = [
     { value: 'nicosia', label: 'Nicosia' },
@@ -548,6 +579,34 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
       return;
     }
 
+    // Check if pickup date is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(pickupDate);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      setValidationError('Please select a future date. Past dates are not allowed.');
+      return;
+    }
+
+    // Check drop-off date
+    if (!dropoffDate) {
+      setValidationError('Please select a drop-off date.');
+      return;
+    }
+
+    // Check if drop-off date is not before pickup date
+    const pickupDateOnly = new Date(pickupDate);
+    pickupDateOnly.setHours(0, 0, 0, 0);
+    const dropoffDateOnly = new Date(dropoffDate);
+    dropoffDateOnly.setHours(0, 0, 0, 0);
+    
+    if (dropoffDateOnly < pickupDateOnly) {
+      setValidationError('Drop-off date cannot be before pickup date.');
+      return;
+    }
+
     // 24-hour validation
     const [pickupHour, pickupMinute] = pickupTime.split(':').map(Number);
     const pickupDateTime = new Date(pickupDate);
@@ -576,18 +635,15 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
     } else {
       params.set('dropoffLocation', dropoffLocation);
     }
-    if (pickupDate) {
-      const year = pickupDate.getFullYear();
-      const month = String(pickupDate.getMonth() + 1).padStart(2, '0');
-      const day = String(pickupDate.getDate()).padStart(2, '0');
-      params.set('pickupDate', `${year}-${month}-${day}`);
-    }
-    if (dropoffDate) {
-      const year = dropoffDate.getFullYear();
-      const month = String(dropoffDate.getMonth() + 1).padStart(2, '0');
-      const day = String(dropoffDate.getDate()).padStart(2, '0');
-      params.set('dropoffDate', `${year}-${month}-${day}`);
-    }
+    const pickupYear = pickupDate.getFullYear();
+    const pickupMonth = String(pickupDate.getMonth() + 1).padStart(2, '0');
+    const pickupDay = String(pickupDate.getDate()).padStart(2, '0');
+    params.set('pickupDate', `${pickupYear}-${pickupMonth}-${pickupDay}`);
+    
+    const dropoffYear = dropoffDate.getFullYear();
+    const dropoffMonth = String(dropoffDate.getMonth() + 1).padStart(2, '0');
+    const dropoffDay = String(dropoffDate.getDate()).padStart(2, '0');
+    params.set('dropoffDate', `${dropoffYear}-${dropoffMonth}-${dropoffDay}`);
     params.set('pickupTime', pickupTime);
     params.set('dropoffTime', dropoffTime);
     
@@ -709,7 +765,7 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
                               dateFormat="dd/MM/yyyy"
                               placeholderText="Select date"
                               className="date-picker-input h-12 w-full border border-gray-300 rounded-md px-3 py-2"
-                              minDate={new Date()}
+                              minDate={new Date(new Date().setHours(0, 0, 0, 0))}
                             />
                           </div>
                         </div>
@@ -802,7 +858,7 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
                               dateFormat="dd/MM/yyyy"
                               placeholderText="Select date"
                               className="date-picker-input h-12 w-full border border-gray-300 rounded-md px-3 py-2"
-                              minDate={pickupDate || new Date()}
+                              minDate={pickupDate || new Date(new Date().setHours(0, 0, 0, 0))}
                             />
                           </div>
                         </div>
@@ -951,7 +1007,7 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
                         dateFormat="dd/MM/yyyy"
                         placeholderText="Select date"
                         className="date-picker-input h-10 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                        minDate={new Date()}
+                        minDate={new Date(new Date().setHours(0, 0, 0, 0))}
                       />
                     </div>
                     <select
@@ -1027,7 +1083,7 @@ export default function SearchPageClient({ categories, currentSeason, searchPara
                         dateFormat="dd/MM/yyyy"
                         placeholderText="Select date"
                         className="date-picker-input h-10 w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
-                        minDate={pickupDate || new Date()}
+                        minDate={pickupDate || new Date(new Date().setHours(0, 0, 0, 0))}
                       />
                     </div>
                     <select

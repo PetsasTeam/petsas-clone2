@@ -2,6 +2,9 @@ import React from 'react';
 import { prisma } from '@/lib/prisma';
 import BookingConfirmationClient from './BookingConfirmationClient';
 import { verifyJCCPayment } from '@/lib/jcc-payment';
+import { sendMail } from '@/lib/mail';
+import { generatePaymentConfirmationEmail } from '@/lib/email-templates';
+import path from 'path';
 
 async function getGlassmorphismSetting() {
   const settings = await prisma.generalSetting.findFirst();
@@ -81,7 +84,7 @@ async function verifyPaymentAndUpdateBooking(bookingId: string, orderId: string)
     }
     
     // Update booking
-    await prisma.booking.update({
+    const updatedBooking = await prisma.booking.update({
       where: { id: bookingId },
       data: {
         paymentStatus,
@@ -97,6 +100,113 @@ async function verifyPaymentAndUpdateBooking(bookingId: string, orderId: string)
       bookingStatus,
       invoiceNo,
     });
+    
+    // Send confirmation email for successful payments
+    if (paymentStatus === 'Paid') {
+      try {
+        console.log('📧 Attempting to send payment confirmation email...');
+        
+        // Get full booking details with customer and vehicle info for email
+        const fullBooking = await prisma.booking.findUnique({
+          where: { id: bookingId },
+          include: {
+            customer: true,
+            vehicle: true,
+          },
+        });
+        
+        if (fullBooking) {
+          console.log('📧 Email configuration check:', {
+            SMTP_HOST: process.env.SMTP_HOST ? 'Set' : 'Missing',
+            SMTP_PORT: process.env.SMTP_PORT ? 'Set' : 'Missing', 
+            SMTP_USER: process.env.SMTP_USER ? 'Set' : 'Missing',
+            SMTP_PASS: process.env.SMTP_PASS ? 'Set' : 'Missing',
+            SMTP_FROM: process.env.SMTP_FROM ? 'Set' : 'Missing',
+          });
+          console.log('📧 Recipient email:', fullBooking.customer.email);
+          console.log('📧 Invoice number:', updatedBooking.invoiceNo);
+          console.log('📧 Order number:', updatedBooking.orderNumber);
+          
+          // Create booking object for email
+          const bookingForEmail = {
+            ...updatedBooking,
+            customer: fullBooking.customer,
+            vehicle: fullBooking.vehicle,
+            startDate: fullBooking.startDate,
+            endDate: fullBooking.endDate,
+            totalPrice: fullBooking.totalPrice,
+            paymentType: fullBooking.paymentType,
+          };
+          
+          // Prepare email data
+          const emailData = {
+            booking: {
+              id: bookingForEmail.id,
+              invoiceNo: bookingForEmail.invoiceNo || 'N/A',
+              orderNumber: bookingForEmail.orderNumber || 'N/A',
+              status: bookingForEmail.status,
+              paymentStatus: 'Paid',
+              paymentType: bookingForEmail.paymentType === 'On Arrival' ? 'Pay on Arrival' : 'Online Payment',
+              totalPrice: bookingForEmail.totalPrice,
+              startDate: bookingForEmail.startDate.toISOString(),
+              endDate: bookingForEmail.endDate.toISOString(),
+              customer: {
+                firstName: bookingForEmail.customer.firstName,
+                lastName: bookingForEmail.customer.lastName,
+                email: bookingForEmail.customer.email,
+                phone: bookingForEmail.customer.phone ?? '',
+              },
+              vehicle: {
+                name: bookingForEmail.vehicle.name,
+                code: bookingForEmail.vehicle.code ?? '',
+                image: bookingForEmail.vehicle.image,
+              },
+            },
+            bookingDetails: {
+              pickupLocation: 'Larnaca Airport', // TODO: Get from booking data
+              dropoffLocation: 'Larnaca Airport', // TODO: Get from booking data  
+              pickupTime: '09:00',
+              dropoffTime: '09:00',
+              selectedExtras: [], // TODO: Get from booking data
+              flightInfo: {
+                flightNo: '',
+                airline: '',
+                arrivalTime: '',
+              },
+              comments: '',
+            },
+          };
+
+          const { html, text } = generatePaymentConfirmationEmail(emailData);
+
+          await sendMail({
+            to: bookingForEmail.customer.email,
+            subject: `Payment Confirmed #${bookingForEmail.orderNumber || bookingForEmail.invoiceNo} - Petsas Car Rentals`,
+            text,
+            html,
+            attachments: [
+              {
+                filename: 'logo.png',
+                path: path.join(process.cwd(), 'public', 'logo.png'),
+                cid: 'logo'
+              }
+            ]
+          });
+          
+          console.log(`✅ Payment confirmation email sent successfully to ${bookingForEmail.customer.email}`);
+        }
+      } catch (emailError) {
+        console.error('❌ Failed to send payment confirmation email:', emailError);
+        console.error('❌ Email error details:', {
+          message: (emailError as Error).message,
+          code: (emailError as any).code,
+          command: (emailError as any).command,
+        });
+        // Don't fail the payment verification for email errors
+      }
+    } else {
+      console.log(`❌ No email sent - payment status: ${paymentStatus}`);
+    }
     
     return paymentStatus === 'Paid';
     
@@ -188,10 +298,10 @@ export default async function BookingConfirmationPage({
           <h1 className="text-2xl font-bold text-gray-900 mb-4">Booking Not Found</h1>
           <p className="text-gray-600 mb-6">The booking you're looking for could not be found.</p>
           <a
-            href="/en/search"
+            href="/en"
             className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
           >
-            Make a New Booking
+            Return to Homepage
           </a>
         </div>
       </div>

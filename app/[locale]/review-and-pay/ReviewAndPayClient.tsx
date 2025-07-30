@@ -82,14 +82,14 @@ export default function ReviewAndPayClient({
     if (!searchParams.vehicleId) {
       console.error('❌ Missing vehicleId in search parameters');
       alert('Vehicle selection is required. Please start from the vehicle selection page.');
-      router.push('/en/search');
+      router.push('/en');
       return;
     }
 
     if (!vehicle || !vehicle.id) {
       console.error('❌ Vehicle data not found');
       alert('Vehicle information is missing. Please select a vehicle again.');
-      router.push('/en/search');
+      router.push('/en');
       return;
     }
 
@@ -135,7 +135,6 @@ export default function ReviewAndPayClient({
     airline: '',
     arrivalTime: '',
     comments: '',
-    howDidYouFindUs: '',
   });
 
   const [loginData, setLoginData] = useState({
@@ -334,7 +333,6 @@ export default function ReviewAndPayClient({
           arrivalTime: formData.arrivalTime,
         },
         comments: formData.comments,
-        howDidYouFindUs: formData.howDidYouFindUs,
       };
       
       console.log('Booking payload:', bookingPayload);
@@ -343,7 +341,7 @@ export default function ReviewAndPayClient({
       if (!bookingPayload.vehicleId) {
         console.error('❌ No vehicleId available for booking');
         alert('Vehicle selection is missing. Please go back and select a vehicle.');
-        router.push('/en/search');
+        router.push('/en');
         return;
       }
       
@@ -427,7 +425,7 @@ export default function ReviewAndPayClient({
           // Check if it's a validation error for missing vehicleId
           if (bookingData.errors && bookingData.errors.vehicleId) {
             alert('Vehicle selection is required. Please go back and select a vehicle first.');
-            router.push('/en/search');
+            router.push('/en');
           } else {
             alert(bookingData.message || 'Failed to create booking');
           }
@@ -799,7 +797,6 @@ export default function ReviewAndPayClient({
             arrivalTime: formData.arrivalTime,
           },
           comments: formData.comments,
-          howDidYouFindUs: formData.howDidYouFindUs,
       };
       
       console.log('Booking payload:', bookingPayload);
@@ -808,7 +805,7 @@ export default function ReviewAndPayClient({
       if (!bookingPayload.vehicleId) {
         console.error('❌ No vehicleId available for booking');
         alert('Vehicle selection is missing. Please go back and select a vehicle.');
-        router.push('/en/search');
+        router.push('/en');
         return;
       }
       
@@ -892,7 +889,7 @@ export default function ReviewAndPayClient({
         // Check if it's a validation error for missing vehicleId
         if (bookingData.errors && bookingData.errors.vehicleId) {
           alert('Vehicle selection is required. Please go back and select a vehicle first.');
-          router.push('/en/search');
+          router.push('/en');
       } else {
         alert(bookingData.message || 'Failed to create booking');
         }
@@ -1014,7 +1011,7 @@ export default function ReviewAndPayClient({
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-center space-x-8">
             <button 
-              onClick={() => router.push('/en/search')}
+              onClick={() => router.push('/en')}
               className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
             >
               <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">1</div>
@@ -1022,7 +1019,7 @@ export default function ReviewAndPayClient({
             </button>
             <div className="w-16 h-0.5 bg-blue-600"></div>
             <button 
-              onClick={() => router.push('/en/search')}
+              onClick={() => router.push('/en')}
               className="flex items-center hover:opacity-80 transition-opacity cursor-pointer"
             >
               <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-bold">2</div>
@@ -1315,24 +1312,7 @@ export default function ReviewAndPayClient({
                   />
                 </div>
 
-                {/* How did you find us */}
-                <div>
-                  <label className="form-label">How did you find us?</label>
-                  <select
-                    name="howDidYouFindUs"
-                    value={formData.howDidYouFindUs}
-                    onChange={handleInputChange}
-                    className="form-select"
-                  >
-                    <option value="">Please select...</option>
-                    <option value="google">Google Search</option>
-                    <option value="social-media">Social Media</option>
-                    <option value="recommendation">Recommendation</option>
-                    <option value="repeat-customer">Repeat Customer</option>
-                    <option value="travel-agent">Travel Agent</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
+
 
                 {/* Terms and Conditions */}
                 <div className={`flex items-start space-x-3 p-4 rounded-lg border-2 transition-colors ${
@@ -1369,7 +1349,7 @@ export default function ReviewAndPayClient({
               <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
                 <span className="text-blue-600 mr-2">Your Selection</span>
                 <button 
-                  onClick={() => router.push('/en/search')}
+                  onClick={() => router.push('/en')}
                   className="text-sm text-blue-600 hover:underline ml-auto cursor-pointer"
                 >
                   change
@@ -1398,7 +1378,7 @@ export default function ReviewAndPayClient({
                 <h4 className="font-bold text-gray-900 mb-3 flex items-center justify-between">
                   Rental Details
                   <button 
-                    onClick={() => router.push('/en/search')}
+                    onClick={() => router.push('/en')}
                     className="text-sm text-blue-600 hover:underline cursor-pointer"
                   >
                     change

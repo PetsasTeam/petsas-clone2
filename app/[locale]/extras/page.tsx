@@ -105,6 +105,23 @@ export default async function ExtrasPage({
 }) {
   const { vehicle, rentalOptions, generalSettings, searchParams: params, currentSeason, promotions } = await getExtrasData(searchParams);
 
+  // Validate required parameters
+  if (!searchParams.pickupLocation || !searchParams.dropoffLocation || !searchParams.pickupDate || !searchParams.dropoffDate || !searchParams.vehicleId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Missing Required Information</h1>
+          <p className="text-gray-600 mb-4">
+            Vehicle selection is required. Please start from the vehicle selection page.
+          </p>
+          <a href="/search" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Back to Search
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (!vehicle) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">

@@ -1,15 +1,16 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma';
 import { 
-  FaCar, 
-  FaUsers, 
   FaCalendarAlt, 
   FaCreditCard, 
-  FaArrowUp, 
-  FaArrowDown,
-  FaPlus,
-  FaEye,
-  FaEdit
+  FaUsers, 
+  FaCar, 
+  FaEye, 
+  FaEdit,
+  FaCheck,
+  FaClock,
+  FaDollarSign,
+  FaPlus
 } from 'react-icons/fa';
 
 const AdminDashboard = async () => {
@@ -52,10 +53,6 @@ const AdminDashboard = async () => {
           <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here's what's happening with your car rental business.</p>
         </div>
-        <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-          <FaPlus className="h-4 w-4" />
-          <span>New Booking</span>
-        </button>
       </div>
 
       {/* Stats Grid */}
@@ -123,10 +120,6 @@ const AdminDashboard = async () => {
             <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3">
               <FaPlus className="h-5 w-5 text-blue-600" />
               <span className="text-gray-700">Add New Vehicle</span>
-            </button>
-            <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3">
-              <FaCalendarAlt className="h-5 w-5 text-green-600" />
-              <span className="text-gray-700">Create Booking</span>
             </button>
             <button className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors flex items-center space-x-3">
               <FaUsers className="h-5 w-5 text-purple-600" />

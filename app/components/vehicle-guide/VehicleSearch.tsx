@@ -97,6 +97,34 @@ const VehicleSearch: React.FC = () => {
       return;
     }
 
+    // Check if pickup date is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(pickupDate);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      setValidationError('Please select a future date. Past dates are not allowed.');
+      return;
+    }
+
+    // Check drop-off date
+    if (!dropoffDate) {
+      setValidationError('Please select a drop-off date.');
+      return;
+    }
+
+    // Check if drop-off date is not before pickup date
+    const pickupDateOnly = new Date(pickupDate);
+    pickupDateOnly.setHours(0, 0, 0, 0);
+    const dropoffDateOnly = new Date(dropoffDate);
+    dropoffDateOnly.setHours(0, 0, 0, 0);
+    
+    if (dropoffDateOnly < pickupDateOnly) {
+      setValidationError('Drop-off date cannot be before pickup date.');
+      return;
+    }
+
     // 24-hour validation
     const [pickupHour, pickupMinute] = pickupTime.split(':').map(Number);
     const pickupDateTime = new Date(pickupDate);
@@ -111,18 +139,15 @@ const VehicleSearch: React.FC = () => {
     const params = new URLSearchParams();
     params.set('pickupLocation', pickupLocation);
     params.set('dropoffLocation', dropoffLocation);
-    if (pickupDate) {
-      const year = pickupDate.getFullYear();
-      const month = String(pickupDate.getMonth() + 1).padStart(2, '0');
-      const day = String(pickupDate.getDate()).padStart(2, '0');
-      params.set('pickupDate', `${year}-${month}-${day}`);
-    }
-    if (dropoffDate) {
-      const year = dropoffDate.getFullYear();
-      const month = String(dropoffDate.getMonth() + 1).padStart(2, '0');
-      const day = String(dropoffDate.getDate()).padStart(2, '0');
-      params.set('dropoffDate', `${year}-${month}-${day}`);
-    }
+    const pickupYear = pickupDate.getFullYear();
+    const pickupMonth = String(pickupDate.getMonth() + 1).padStart(2, '0');
+    const pickupDay = String(pickupDate.getDate()).padStart(2, '0');
+    params.set('pickupDate', `${pickupYear}-${pickupMonth}-${pickupDay}`);
+    
+    const dropoffYear = dropoffDate.getFullYear();
+    const dropoffMonth = String(dropoffDate.getMonth() + 1).padStart(2, '0');
+    const dropoffDay = String(dropoffDate.getDate()).padStart(2, '0');
+    params.set('dropoffDate', `${dropoffYear}-${dropoffMonth}-${dropoffDay}`);
     params.set('pickupTime', pickupTime);
     params.set('dropoffTime', dropoffTime);
     
@@ -188,7 +213,7 @@ const VehicleSearch: React.FC = () => {
                     dateFormat="dd/MM/yyyy"
                     placeholderText="Select date"
                               className="date-picker-input h-12 w-full border border-gray-300 rounded-md px-3 py-2"
-                    minDate={new Date()}
+                    minDate={new Date(new Date().setHours(0, 0, 0, 0))}
                   />
                 </div>
               </div>
@@ -258,7 +283,7 @@ const VehicleSearch: React.FC = () => {
                     dateFormat="dd/MM/yyyy"
                     placeholderText="Select date"
                               className="date-picker-input h-12 w-full border border-gray-300 rounded-md px-3 py-2"
-                              minDate={pickupDate || new Date()}
+                              minDate={pickupDate || new Date(new Date().setHours(0, 0, 0, 0))}
                   />
                 </div>
               </div>

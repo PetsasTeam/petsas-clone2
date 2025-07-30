@@ -109,10 +109,31 @@ async function getSearchResults(searchParams: SearchParams) {
 }
 
 export default async function SearchPage({ searchParams }: Props) {
+  // Validate required search parameters
+  if (!searchParams.pickupLocation || !searchParams.dropoffLocation || !searchParams.pickupDate || !searchParams.dropoffDate) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Search Parameters Required</h1>
+          <p className="text-gray-600 mb-4">
+            Please provide pickup location, drop-off location, and dates to search for vehicles.
+          </p>
+          <a href="/" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Start New Search
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   const { categories, currentSeason, searchParams: params, generalSettings, locations } = await getSearchResults(searchParams);
+  
+  // Create a unique key based on search parameters to force re-render when they change
+  const searchKey = `${params.pickupLocation || ''}-${params.dropoffLocation || ''}-${params.pickupDate || ''}-${params.dropoffDate || ''}-${params.pickupTime || ''}-${params.dropoffTime || ''}`;
   
   return (
     <SearchPageClient 
+      key={searchKey}
       categories={categories} 
       currentSeason={currentSeason} 
       searchParams={params} 

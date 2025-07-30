@@ -1,7 +1,7 @@
 import React from 'react';
 import { PrismaClient } from '../../generated/prisma';
 import BookingsClient from './BookingsClient';
-import { FaPlus, FaCalendarAlt, FaCreditCard, FaCheck, FaClock } from 'react-icons/fa';
+import { FaCalendarAlt, FaCreditCard, FaCheck, FaClock } from 'react-icons/fa';
 
 const prisma = new PrismaClient();
 
@@ -52,13 +52,6 @@ export default async function BookingsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Booking Management</h1>
           <p className="text-gray-600">Manage customer bookings and track payment transactions</p>
         </div>
-        <a 
-          href="/admin/bookings/new"
-          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-        >
-          <FaPlus className="h-4 w-4" />
-          <span>New Booking</span>
-        </a>
       </div>
 
       {/* Quick Stats */}

@@ -94,16 +94,6 @@ const AdminSidebar: React.FC = () => {
           icon: <FaCalendarAlt className="h-4 w-4" />
         },
         {
-          title: 'New Booking',
-          href: '/admin/bookings/new',
-          icon: <FaPlus className="h-4 w-4" />
-        },
-        {
-          title: 'Payment Tracking',
-          href: '/admin/bookings/payments',
-          icon: <FaCreditCard className="h-4 w-4" />
-        },
-        {
           title: 'Payment Logs',
           href: '/admin/payment-logs',
           icon: <FaCreditCard className="h-4 w-4" />

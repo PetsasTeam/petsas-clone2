@@ -305,7 +305,7 @@ export default function BookingConfirmationClient({
             View My Bookings
           </button>
           <button
-            onClick={() => router.push('/en/search')}
+            onClick={() => router.push('/en')}
             className="bg-gray-600 text-white px-8 py-3 rounded-lg hover:bg-gray-700 transition-colors font-semibold"
           >
             Make Another Booking

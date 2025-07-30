@@ -202,6 +202,17 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
       return false;
     }
 
+    // Check if pickup date is in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const selectedDate = new Date(formData.pickupDate);
+    selectedDate.setHours(0, 0, 0, 0);
+    
+    if (selectedDate < today) {
+      setValidationError('Please select a future date. Past dates are not allowed.');
+      return false;
+    }
+
     // Create pickup datetime
     const pickupDateTime = new Date(formData.pickupDate);
     pickupDateTime.setHours(parseInt(formData.pickupHour), parseInt(formData.pickupMinute), 0, 0);
@@ -215,6 +226,21 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
     // Check if pickup time is at least 24 hours from now
     if (pickupDateTime < twentyFourHoursFromNow) {
       setValidationError('You can book a car at least 24 hours before pick up. Please modify the Pick Up time and try again.');
+      return false;
+    }
+
+    // Check drop-off date
+    if (!formData.dropoffDate) {
+      setValidationError('Please select a drop-off date.');
+      return false;
+    }
+
+    // Check if drop-off date is not before pickup date
+    const dropoffDate = new Date(formData.dropoffDate);
+    dropoffDate.setHours(0, 0, 0, 0);
+    
+    if (dropoffDate < selectedDate) {
+      setValidationError('Drop-off date cannot be before pickup date.');
       return false;
     }
 
@@ -348,6 +374,29 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
               <option key={loc.value} value={loc.value}>{loc.label}</option>
             ))}
           </select>
+          
+          {/* Custom pickup location fields for compact form */}
+          {formData.pickupLocation === 'custom' && (
+            <div className="custom-location-fields-compact">
+              <select 
+                className="form-select"
+                value={formData.pickupCustomCity}
+                onChange={(e) => setFormData({...formData, pickupCustomCity: e.target.value})}
+              >
+                <option value="">Select city/area</option>
+                {cities.map(city => (
+                  <option key={city.value} value={city.value}>{city.label}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Enter hotel name or address"
+                value={formData.pickupCustomLocation}
+                onChange={(e) => setFormData({...formData, pickupCustomLocation: e.target.value})}
+              />
+            </div>
+          )}
         </div>
 
         <div className="input-group date-group">
@@ -359,7 +408,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
               dateFormat="dd/MM/yyyy"
               placeholderText="Select date"
               className="date-picker-input"
-              minDate={new Date()}
+              minDate={new Date(new Date().setHours(0, 0, 0, 0))}
             />
           </div>
         </div>
@@ -378,7 +427,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
           </select>
         </div>
 
-        <div className="input-group">
+        <div className="input-group dropoff-group">
           <div className="drop-off-header-compact">
             <label className="form-label">Drop off</label>
             <div className="checkbox-group">
@@ -389,16 +438,40 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
           {formData.differentDropoff ? (
             <select
               className="form-select"
-              value={formData.dropoffLocation}
+              value={formData.dropoffLocation || formData.pickupLocation}
               onChange={(e) => handleDropoffLocationChange(e.target.value)}
             >
-              <option value="">Select drop-off location</option>
               {locationOptions.map(loc => (
                 <option key={loc.value} value={loc.value}>{loc.label}</option>
               ))}
             </select>
           ) : (
-             <div className="location-display-compact">Same as pickup location</div>
+             <div className="location-display-compact">
+               {locationOptions.find(loc => loc.value === formData.pickupLocation)?.label || 'Same as pickup location'}
+             </div>
+          )}
+          
+          {/* Custom dropoff location fields for compact form */}
+          {formData.differentDropoff && formData.dropoffLocation === 'custom' && (
+            <div className="custom-location-fields-compact">
+              <select 
+                className="form-select"
+                value={formData.dropoffCustomCity}
+                onChange={(e) => setFormData({...formData, dropoffCustomCity: e.target.value})}
+              >
+                <option value="">Select city/area</option>
+                {cities.map(city => (
+                  <option key={city.value} value={city.value}>{city.label}</option>
+                ))}
+              </select>
+              <input
+                type="text"
+                className="form-input"
+                placeholder="Enter hotel name or address"
+                value={formData.dropoffCustomLocation}
+                onChange={(e) => setFormData({...formData, dropoffCustomLocation: e.target.value})}
+              />
+            </div>
           )}
         </div>
 
@@ -411,7 +484,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
               dateFormat="dd/MM/yyyy"
               placeholderText="Select date"
               className="date-picker-input"
-              minDate={formData.pickupDate || new Date()}
+                                minDate={formData.pickupDate || new Date(new Date().setHours(0, 0, 0, 0))}
               disabled={!formData.differentDropoff}
             />
           </div>
@@ -482,6 +555,11 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
             font-size: 14px;
             width: 100%;
             height: 37px;
+            box-sizing: border-box;
+            flex-grow: 1;
+            flex-basis: 150px;
+            min-width: 0;
+            max-width: 100%;
           }
           .date-picker-wrapper {
             width: 100%;
@@ -531,20 +609,30 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
             padding: 8px;
             border: 1px solid #003366;
             border-radius: 4px;
-            background-color: #e9ecef;
-            color: #6c757d;
-            font-size: 12px;
+            background-color: white;
+            color: #003366;
+            font-size: 14px;
             height: 37px; 
             display: flex;
             align-items: center;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            box-sizing: border-box;
+            width: 100%;
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            cursor: default;
+            flex-grow: 1;
+            flex-basis: 150px;
           }
           .drop-off-header-compact {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            width: 100%;
+            margin-bottom: 4px;
           }
           .checkbox-group {
             display: flex;
@@ -555,6 +643,29 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
             font-size: 11px;
             color: #003366;
             font-weight: normal;
+          }
+          
+          /* Ensure drop-off location dropdown has consistent width */
+          .input-group .form-select {
+            width: 100% !important;
+            flex: 1 1 auto;
+          }
+          
+          /* Fix for drop-off location container to match pickup location width */
+          .input-group.dropoff-group {
+            min-width: 0;
+            flex-shrink: 0;
+            flex-grow: 1;
+            flex-basis: 100%;
+            flex: 1 0 100% !important;
+          }
+          
+          /* Ensure the select element takes full width regardless of header structure */
+          .input-group.dropoff-group .form-select {
+            width: 100% !important;
+            min-width: 0;
+            flex: 1 1 100%;
+            box-sizing: border-box;
           }
           .search-button-compact {
             padding: 8px 16px;
@@ -720,7 +831,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
                   dateFormat="dd/MM/yyyy"
                   placeholderText="Select date"
                   className="date-picker-input"
-                  minDate={new Date()}
+                  minDate={new Date(new Date().setHours(0, 0, 0, 0))}
               />
               </div>
             </div>
@@ -827,7 +938,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
                   dateFormat="dd/MM/yyyy"
                   placeholderText="Select date"
                   className="date-picker-input"
-                  minDate={formData.pickupDate || new Date()}
+                  minDate={formData.pickupDate || new Date(new Date().setHours(0, 0, 0, 0))}
               />
               </div>
             </div>
@@ -1142,6 +1253,41 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
           border-radius: 12px;
           border: 1px solid rgba(255, 255, 255, 0.3);
           box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .custom-location-fields-compact {
+          display: flex;
+          flex-direction: column;
+          gap: 16px;
+          margin-top: 16px;
+          padding: 20px;
+          background: var(--glass-bg-tertiary, rgba(255, 255, 255, 0.4)) !important;
+          backdrop-filter: blur(8px) !important;
+          -webkit-backdrop-filter: blur(8px) !important;
+          border-radius: 12px;
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        /* Compact form specific styling for custom location fields */
+        .compact-form-horizontal .custom-location-fields-compact {
+          margin-top: 8px;
+          padding: 12px;
+          gap: 8px;
+          border-radius: 8px;
+          background: rgba(255, 255, 255, 0.6) !important;
+          border: 1px solid rgba(0, 51, 102, 0.2);
+        }
+        
+        .compact-form-horizontal .custom-location-fields-compact .form-select,
+        .compact-form-horizontal .custom-location-fields-compact .form-input {
+          padding: 6px 8px;
+          font-size: 12px;
+          height: 32px;
+          border: 1px solid #003366;
+          border-radius: 4px;
+          background-color: white;
+          color: #003366;
         }
 
         .drop-off-header {

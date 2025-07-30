@@ -20,7 +20,8 @@ async function createNewRentalOption(formData: FormData) {
   const description = formData.get('description') as string || null;
 
   if (!code || !name || !priceType) {
-    throw new Error('Code, name, and price type are required');
+    // Instead of throwing, redirect with error parameter
+    redirect('/admin/setup/rental-options/new?error=Code, name, and price type are required');
   }
 
   try {
@@ -30,7 +31,7 @@ async function createNewRentalOption(formData: FormData) {
     });
 
     if (existingOption) {
-      throw new Error(`A rental option with code "${code}" already exists. Please use a different code.`);
+      redirect(`/admin/setup/rental-options/new?error=A rental option with code "${code}" already exists. Please use a different code.`);
     }
 
     const newRentalOption = await prisma.rentalOption.create({
@@ -51,14 +52,16 @@ async function createNewRentalOption(formData: FormData) {
     redirect('/admin/setup/rental-options');
   } catch (error) {
     console.error('Error creating rental option:', error);
-    if (error instanceof Error) {
-      throw new Error(error.message);
-    }
-    throw new Error('Failed to create rental option');
+    const errorMessage = error instanceof Error ? error.message : 'Failed to create rental option';
+    redirect(`/admin/setup/rental-options/new?error=${encodeURIComponent(errorMessage)}`);
   }
 }
 
-export default async function NewRentalOptionPage() {
+interface PageProps {
+  searchParams: { error?: string };
+}
+
+export default async function NewRentalOptionPage({ searchParams }: PageProps) {
   // Get the next display order by finding the highest current order
   const maxOrder = await prisma.rentalOption.findFirst({
     orderBy: { displayOrder: 'desc' },
@@ -66,6 +69,7 @@ export default async function NewRentalOptionPage() {
   });
 
   const nextDisplayOrder = (maxOrder?.displayOrder || 0) + 1;
+  const errorMessage = searchParams.error;
 
   return (
     <div className="space-y-6">
@@ -86,6 +90,27 @@ export default async function NewRentalOptionPage() {
           </Link>
         </div>
       </div>
+
+      {/* Error Message */}
+      {errorMessage && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Error creating rental option
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                {errorMessage}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Form */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">

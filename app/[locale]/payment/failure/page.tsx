@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { XCircleIcon, CreditCardIcon, PhoneIcon } from 'lucide-react';
+import { XCircleIcon, PhoneIcon } from 'lucide-react';
 
 export default function PaymentFailurePage() {
   const router = useRouter();
@@ -107,29 +107,7 @@ export default function PaymentFailurePage() {
           <div className="border-t border-gray-200 pt-8 mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-6">What would you like to do?</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="border border-gray-200 rounded-lg p-6 hover:border-blue-300 transition-colors">
-                <CreditCardIcon className="w-8 h-8 text-blue-600 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Try Different Payment Method</h3>
-                <p className="text-gray-600 mb-4">
-                  Use a different credit card or payment method to complete your booking.
-                </p>
-                <button
-                  onClick={() => {
-                    if (bookingId) {
-                      // Redirect back to payment with the same booking
-                      router.push(`/en/review-and-pay?bookingId=${bookingId}&retry=true`);
-                    } else {
-                      // Redirect to general payment page
-                      router.push('/en/review-and-pay');
-                    }
-                  }}
-                  className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-                >
-                  Try Different Card
-                </button>
-              </div>
-
+            <div className="max-w-md mx-auto">
               <div className="border border-gray-200 rounded-lg p-6 hover:border-green-300 transition-colors">
                 <PhoneIcon className="w-8 h-8 text-green-600 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Contact Support</h3>
@@ -149,7 +127,7 @@ export default function PaymentFailurePage() {
           {/* Additional Options */}
           <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-200">
             <button
-              onClick={() => router.push('/en/search')}
+              onClick={() => router.push('/en')}
               className="flex-1 bg-gray-100 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
             >
               Start New Search
@@ -167,8 +145,8 @@ export default function PaymentFailurePage() {
           <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
             <p className="text-sm text-blue-800">
               <strong>Need immediate assistance?</strong> Call us at{' '}
-              <a href="tel:+35724633344" className="font-semibold underline">
-                +357 24 633 344
+              <a href="tel:+35722456450" className="font-semibold underline">
+                +357 22456450
               </a>{' '}
               and our team will help you complete your booking.
             </p>

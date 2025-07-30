@@ -40,6 +40,23 @@ export default async function ReviewAndPayPage({
 }: {
   searchParams: SearchParams;
 }) {
+  // Validate required parameters
+  if (!searchParams.pickupLocation || !searchParams.dropoffLocation || !searchParams.pickupDate || !searchParams.dropoffDate || !searchParams.vehicleId) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="bg-white p-8 rounded-lg shadow-md max-w-md text-center">
+          <h1 className="text-2xl font-bold text-red-600 mb-4">Missing Required Information</h1>
+          <p className="text-gray-600 mb-4">
+            Vehicle selection is required. Please start from the vehicle selection page.
+          </p>
+          <a href="/search" className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+            Back to Search
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   const [glassmorphismEnabled, generalSettings] = await Promise.all([
     getGlassmorphismSetting(),
     getGeneralSettings(),

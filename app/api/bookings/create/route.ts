@@ -32,7 +32,6 @@ const BookingSchema = z.object({
     arrivalTime: z.string().optional(),
   }).optional(),
   comments: z.string().optional(),
-  howDidYouFindUs: z.string().optional(),
   promotionCode: z.string().optional(),
 });
 
@@ -113,7 +112,6 @@ export async function POST(request: NextRequest) {
       selectedExtras,
       flightInfo,
       comments,
-      howDidYouFindUs,
       promotionCode,
     } = validatedFields.data;
 
@@ -296,7 +294,6 @@ export async function POST(request: NextRequest) {
       selectedExtras,
       flightInfo,
       comments,
-      howDidYouFindUs,
       promotionCode,
     });
 
