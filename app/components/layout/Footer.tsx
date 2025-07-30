@@ -24,7 +24,7 @@ const Footer: React.FC = () => {
               <a href="https://www.facebook.com/petsascarrentals" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                 <FaFacebook />
               </a>
-              <a href="https://www.instagram.com/petsascarrentals" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+              <a href="https://www.instagram.com/petsasrentacar/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
                 <FaInstagram />
               </a>
               <a href="https://www.linkedin.com/company/petsas/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
