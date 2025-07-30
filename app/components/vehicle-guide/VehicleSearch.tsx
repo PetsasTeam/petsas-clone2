@@ -108,7 +108,7 @@ const VehicleSearch: React.FC<VehicleSearchProps> = ({ locations: propLocations 
     };
 
     loadLocations();
-  }, [propLocations, memoizedLocationOptions]);
+  }, [propLocations]);
 
   // Update dropoff location if not different
   React.useEffect(() => {

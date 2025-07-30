@@ -151,7 +151,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
     };
 
     loadLocations();
-  }, [propLocations, memoizedLocationOptions]);
+  }, [propLocations]);
 
   const cities = [
     { value: 'nicosia', label: 'Nicosia' },
