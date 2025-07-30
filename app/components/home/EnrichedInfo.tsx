@@ -49,20 +49,22 @@ const EnrichedInfo: React.FC = () => {
       <style jsx>{`
         .enriched-info-container {
           display: grid;
-          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-          gap: 1.5rem;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 2.5rem;
           max-width: 1200px;
           margin: 2rem auto 0;
         }
         .feature-card {
           background: white;
           border: 1px solid #e5e7eb;
-          border-radius: 12px;
-          padding: 1.5rem;
+          border-radius: 16px;
+          padding: 2.5rem;
           display: flex;
           align-items: flex-start;
           transition: all 0.3s ease;
           box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+          min-height: 200px;
+          height: 100%;
         }
         .feature-card:hover {
           transform: translateY(-5px);
@@ -70,28 +72,61 @@ const EnrichedInfo: React.FC = () => {
           border-color: #d1d5db;
         }
         .feature-icon {
-          font-size: 1.75rem;
-          margin-right: 1rem;
+          font-size: 2.5rem;
+          margin-right: 1.5rem;
           background-color: #f3f4f6;
           border-radius: 50%;
-          width: 50px;
-          height: 50px;
+          width: 70px;
+          height: 70px;
           display: flex;
           align-items: center;
           justify-content: center;
           flex-shrink: 0;
         }
         .feature-title {
-          font-size: 1.1rem;
+          font-size: 1.3rem;
           font-weight: 700;
           color: #1f2937;
-          margin: 0 0 0.25rem;
+          margin: 0 0 0.75rem;
+          line-height: 1.3;
         }
         .feature-description {
-          font-size: 0.9rem;
+          font-size: 1rem;
           color: #6b7280;
           line-height: 1.6;
           margin: 0;
+        }
+
+        /* Responsive design for smaller screens */
+        @media (max-width: 1024px) {
+          .enriched-info-container {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 2rem;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .enriched-info-container {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin: 1.5rem auto 0;
+          }
+          .feature-card {
+            padding: 2rem;
+            min-height: 180px;
+          }
+          .feature-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 2rem;
+            margin-right: 1.25rem;
+          }
+          .feature-title {
+            font-size: 1.2rem;
+          }
+          .feature-description {
+            font-size: 0.95rem;
+          }
         }
       `}</style>
     </div>
