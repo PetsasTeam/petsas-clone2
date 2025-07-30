@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Select from 'react-select';
@@ -101,27 +101,37 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
   });
 
   const [locationOptions, setLocationOptions] = useState<LocationOption[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!propLocations); // Don't show loading if locations are provided
+
+  // Memoized location options to prevent unnecessary re-computation
+  const memoizedLocationOptions = useMemo(() => {
+    if (propLocations) {
+      const options = propLocations
+        .filter(loc => loc.visible)
+        .map(loc => ({
+          value: loc.id,
+          label: loc.name
+        }));
+      options.push({ value: 'custom', label: 'Custom (Hotel or Address)' });
+      return options;
+    }
+    return [];
+  }, [propLocations]);
 
   // Load locations on component mount
   useEffect(() => {
     const loadLocations = async () => {
+      if (propLocations) {
+        // Use memoized location options immediately
+        setLocationOptions(memoizedLocationOptions);
+        setLoading(false);
+        return;
+      }
+
       try {
-        if (propLocations) {
-          // Use provided locations
-          const options = propLocations
-            .filter(loc => loc.visible)
-            .map(loc => ({
-              value: loc.id,
-              label: loc.name
-            }));
-          options.push({ value: 'custom', label: 'Custom (Hotel or Address)' });
-          setLocationOptions(options);
-        } else {
-          // Fetch locations from API
-          const options = await getLocationOptions();
-          setLocationOptions(options);
-        }
+        // Fetch locations from API only if not provided
+        const options = await getLocationOptions();
+        setLocationOptions(options);
       } catch (error) {
         console.error('Error loading locations:', error);
         // Set fallback locations on error
@@ -141,7 +151,7 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
     };
 
     loadLocations();
-  }, [propLocations]);
+  }, [propLocations, memoizedLocationOptions]);
 
   const cities = [
     { value: 'nicosia', label: 'Nicosia' },

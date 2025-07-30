@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
@@ -11,7 +11,20 @@ import {
   Navigation,
 } from "lucide-react";
 
-const VehicleSearch: React.FC = () => {
+interface Location {
+  id: string;
+  name: string;
+  type: string;
+  visible: boolean;
+  isPickupPoint: boolean;
+  isDropoffPoint: boolean;
+}
+
+interface VehicleSearchProps {
+  locations?: Location[];
+}
+
+const VehicleSearch: React.FC<VehicleSearchProps> = ({ locations: propLocations }) => {
   const router = useRouter();
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [validationError, setValidationError] = useState<string>('');
@@ -25,11 +38,35 @@ const VehicleSearch: React.FC = () => {
   const [dropoffTime, setDropoffTime] = useState('09:00');
   const [differentDropoff, setDifferentDropoff] = useState(false);
   const [locationOptions, setLocationOptions] = useState<Array<{value: string, label: string}>>([]);
+  const [loading, setLoading] = useState(!propLocations);
+
+  // Memoized location options for better performance
+  const memoizedLocationOptions = useMemo(() => {
+    if (propLocations) {
+      const options = propLocations
+        .filter(loc => loc.visible)
+        .map(loc => ({
+          value: loc.id,
+          label: loc.name
+        }));
+      options.push({ value: 'custom', label: 'Custom (Hotel or Address)' });
+      return options;
+    }
+    return [];
+  }, [propLocations]);
 
   // Load location options
-  React.useEffect(() => {
+  useEffect(() => {
     const loadLocations = async () => {
+      if (propLocations) {
+        // Use provided locations immediately
+        setLocationOptions(memoizedLocationOptions);
+        setLoading(false);
+        return;
+      }
+
       try {
+        // Fetch from API only if locations not provided
         const response = await fetch('/api/locations');
         if (response.ok) {
           const locations = await response.json();
@@ -65,11 +102,13 @@ const VehicleSearch: React.FC = () => {
           { value: 'nicosia-office', label: 'Nicosia Office' },
           { value: 'custom', label: 'Custom (Hotel or Address)' }
         ]);
+      } finally {
+        setLoading(false);
       }
     };
 
     loadLocations();
-  }, []);
+  }, [propLocations, memoizedLocationOptions]);
 
   // Update dropoff location if not different
   React.useEffect(() => {
