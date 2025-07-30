@@ -1309,6 +1309,15 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
 
         .drop-off-location {
           margin-top: 12px;
+          width: 100%;
+        }
+
+        /* Ensure drop-off location select has consistent width */
+        .drop-off-location .form-select {
+          width: 100% !important;
+          min-width: 0;
+          flex: 1;
+          box-sizing: border-box;
         }
 
         .location-display {
@@ -1326,6 +1335,8 @@ const BookingForm: React.FC<BookingFormProps> = ({ isCompact = false, locations:
             0 4px 6px -1px rgba(0, 0, 0, 0.05),
             0 2px 4px -1px rgba(0, 0, 0, 0.03),
             inset 0 1px 0 rgba(255, 255, 255, 0.3);
+          width: 100%;
+          box-sizing: border-box;
         }
 
         .checkbox-group {
