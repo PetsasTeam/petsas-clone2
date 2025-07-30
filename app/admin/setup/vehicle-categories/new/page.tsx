@@ -1,10 +1,8 @@
 import React from 'react';
 import { redirect } from 'next/navigation';
-import { PrismaClient } from '../../../../generated/prisma';
+import { prisma } from '../../../../../lib/prisma';
 import { FaSave, FaArrowLeft } from 'react-icons/fa';
 import Link from 'next/link';
-
-const prisma = new PrismaClient();
 
 async function createCategory(formData: FormData) {
   'use server';

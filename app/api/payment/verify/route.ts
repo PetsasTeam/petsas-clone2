@@ -76,7 +76,7 @@ async function logPaymentAttempt(data: {
         errorDetails: data.errorDetails,
       },
     });
-    console.log('✅ Payment attempt logged successfully');
+
   } catch (error) {
     console.error('❌ Failed to log payment attempt:', error);
     // Don't throw - logging failures shouldn't break payment processing
@@ -159,7 +159,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (existingPayment) {
-      console.log(`🔄 JCC Order ${orderId} already processed successfully, skipping duplicate`);
+
       return NextResponse.json({
         success: true,
         message: 'Payment already processed',

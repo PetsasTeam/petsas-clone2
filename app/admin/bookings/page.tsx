@@ -1,9 +1,10 @@
 import React from 'react';
-import { PrismaClient } from '../../generated/prisma';
+import { prisma } from '../../../lib/prisma';
+import { BOOKING_STATUS } from '../../../lib/constants';
 import BookingsClient from './BookingsClient';
 import { FaCalendarAlt, FaCreditCard, FaCheck, FaClock } from 'react-icons/fa';
 
-const prisma = new PrismaClient();
+
 
 export default async function BookingsPage() {
   // Fetch bookings with all related data
@@ -40,7 +41,7 @@ export default async function BookingsPage() {
   const stats = {
     total: bookings.length,
     online: bookings.filter(b => b.paymentType === 'Online').length,
-    completed: bookings.filter(b => b.status === 'Confirmed').length, // Changed from 'Completed' to 'Confirmed'
+    completed: bookings.filter(b => b.status === BOOKING_STATUS.CONFIRMED).length,
     pending: bookings.filter(b => b.status === 'Pending').length,
   };
 

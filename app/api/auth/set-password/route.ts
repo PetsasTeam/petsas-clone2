@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '../../../generated/prisma';
+import { prisma } from '../../../../lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
 import { sendMail } from '../../../../lib/mail';
-
-const prisma = new PrismaClient();
 
 // Validation schema
 const SetPasswordSchema = z.object({

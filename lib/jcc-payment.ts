@@ -57,16 +57,7 @@ export async function createJCCPaymentOrder(orderData: JCCOrderRequest): Promise
   try {
     const config = getConfig();
     
-    // Debug environment variables
-    console.log('JCC Configuration Debug:', {
-      IS_TEST: JCC_CONFIG.IS_TEST,
-      NODE_ENV: process.env.NODE_ENV,
-      JCC_TEST_MODE: process.env.JCC_TEST_MODE,
-      TEST_LOGIN: process.env.JCC_TEST_LOGIN ? 'SET' : 'NOT SET',
-      TEST_PASSWORD: process.env.JCC_TEST_PASSWORD ? 'SET' : 'NOT SET',
-      config_login: config.login ? 'SET' : 'NOT SET',
-      config_password: config.password ? 'SET' : 'NOT SET',
-    });
+
     
     if (!config.login || !config.password) {
       const mode = JCC_CONFIG.IS_TEST ? 'test' : 'production';

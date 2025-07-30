@@ -1,8 +1,8 @@
 import React from 'react';
 import { FaEdit, FaTrash, FaPlus, FaEye } from 'react-icons/fa';
-import { PrismaClient } from '../../../generated/prisma';
+import { prisma } from '../../../../lib/prisma';
 
-const prisma = new PrismaClient();
+
 
 async function getPricingData() {
   const seasonalPricing = await prisma.seasonalPricing.findMany({

@@ -1,9 +1,10 @@
 import { getTranslations } from 'next-intl/server';
-import { PrismaClient, Vehicle } from '../../generated/prisma';
+import { Vehicle } from '../../generated/prisma';
+import { prisma } from '../../../lib/prisma';
 import VehicleCard from '../../components/vehicle-guide/VehicleCard';
 import VehicleSearch from '../../components/vehicle-guide/VehicleSearch';
 
-const prisma = new PrismaClient();
+
 
 async function getVehicleData(): Promise<Vehicle[]> {
   const allVehicles = await prisma.vehicle.findMany({

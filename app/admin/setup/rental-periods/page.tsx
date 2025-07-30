@@ -1,9 +1,10 @@
-import { PrismaClient, Season } from '../../../generated/prisma';
+import { Season } from '../../../generated/prisma';
+import { prisma } from '../../../../lib/prisma';
 import Link from 'next/link';
 import { FaEdit, FaTrash, FaSun, FaCalendarAlt, FaSnowflake, FaStar, FaCalendarCheck, FaTag } from 'react-icons/fa';
 import { DeleteButton, EditButton } from './DeleteButtons';
 
-const prisma = new PrismaClient();
+
 
 async function getRentalPeriods() {
   const periods = await prisma.season.findMany({

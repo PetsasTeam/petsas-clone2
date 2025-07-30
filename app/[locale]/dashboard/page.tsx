@@ -1,7 +1,7 @@
-import { PrismaClient } from '../../generated/prisma';
+import { prisma } from '../../../lib/prisma';
 import DashboardClient from './DashboardClient';
 
-const prisma = new PrismaClient();
+
 
 export default async function DashboardPage() {
   // Get glassmorphism setting

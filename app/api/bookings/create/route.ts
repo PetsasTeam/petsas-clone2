@@ -66,24 +66,12 @@ async function sendBookingConfirmationEmailNew(booking: any, bookingDetails: any
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('=== BOOKING API: POST REQUEST RECEIVED ===');
-    
     const body = await request.json();
     
-    // Log the incoming request body for debugging
-    console.log('📝 Booking creation request body:', JSON.stringify(body, null, 2));
-    
     // Validate input
-    console.log('🔍 Starting validation...');
     const validatedFields = BookingSchema.safeParse(body);
     
     if (!validatedFields.success) {
-      console.log('❌ VALIDATION FAILED');
-      console.log('Validation errors:', JSON.stringify(validatedFields.error.flatten(), null, 2));
-      console.log('Received data keys:', Object.keys(body));
-      console.log('Received data types:', Object.fromEntries(
-        Object.entries(body).map(([key, value]) => [key, typeof value])
-      ));
       
       return NextResponse.json(
         { 
@@ -96,7 +84,7 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log('✅ Validation passed');
+
 
     const {
       customerId,
@@ -132,13 +120,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Verify customer exists
-    console.log('🔍 Looking up customer in database...');
+
     const customer = await prisma.customer.findUnique({
       where: { id: actualCustomerId },
     });
 
     if (!customer) {
-      console.log('❌ Customer not found with ID:', actualCustomerId);
+
       return NextResponse.json(
         { 
           success: false, 
@@ -148,18 +136,17 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    console.log('✅ Customer found:', { id: customer.id, email: customer.email });
+
 
     // Verify vehicle exists and is available
-    console.log('🔍 Looking up vehicle in database...');
-    console.log('Vehicle ID:', vehicleId);
+
     
     const vehicle = await prisma.vehicle.findUnique({
       where: { id: vehicleId },
     });
 
     if (!vehicle) {
-      console.log('❌ Vehicle not found with ID:', vehicleId);
+
       return NextResponse.json(
         { 
           success: false, 
@@ -180,12 +167,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('✅ Vehicle found and available:', { id: vehicle.id, name: vehicle.name });
 
-    console.log('🔍 Invoice numbers will be assigned after successful payment...');
+
+
 
     // Generate order number for ALL bookings (both arrival and online)
-    console.log('📋 Generating order number for booking...');
+
     
     // Get current order counter from settings to ensure it exists
     const generalSettings = await prisma.generalSetting.findFirst();

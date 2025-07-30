@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '../../../generated/prisma';
+import { prisma } from '../../../../lib/prisma';
 import bcrypt from 'bcryptjs';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
 
 // Validation schema
 const LoginSchema = z.object({

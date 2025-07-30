@@ -1,10 +1,8 @@
 'use server';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '../../../../generated/prisma';
+import { prisma } from '../../../../../../lib/prisma';
 import { z } from 'zod';
-
-const prisma = new PrismaClient();
 
 const BulkDeleteSchema = z.object({
   bookingIds: z.array(z.string().min(1, 'Booking ID is required')),

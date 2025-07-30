@@ -1,8 +1,6 @@
 import React from 'react';
-import { PrismaClient } from '../../generated/prisma';
+import { prisma } from '../../../lib/prisma';
 import CustomersClient from './CustomersClient';
-
-const prisma = new PrismaClient();
 
 async function getCustomers() {
   const customers = await prisma.customer.findMany({

@@ -1,9 +1,7 @@
 'use server';
 
-import { PrismaClient } from '../../../generated/prisma';
+import { prisma } from '../../../../lib/prisma';
 import { revalidatePath } from 'next/cache';
-
-const prisma = new PrismaClient();
 
 interface CategoryUpdateData {
   name: string;

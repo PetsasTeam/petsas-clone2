@@ -1,5 +1,6 @@
 import React from 'react';
 import { prisma } from '@/lib/prisma';
+import { BOOKING_STATUS } from '@/lib/constants';
 import { 
   FaCalendarAlt, 
   FaCreditCard, 
@@ -8,8 +9,6 @@ import {
   FaEye, 
   FaEdit,
   FaCheck,
-  FaClock,
-  FaDollarSign,
   FaPlus
 } from 'react-icons/fa';
 
@@ -17,7 +16,7 @@ const AdminDashboard = async () => {
 
   const totalVehicles = await prisma.vehicle.count();
   const totalCustomers = await prisma.customer.count();
-  const activeBookingsCount = await prisma.booking.count({ where: { status: 'Confirmed' } });
+  const activeBookingsCount = await prisma.booking.count({ where: { status: BOOKING_STATUS.CONFIRMED } });
   const totalCategories = await prisma.vehicleCategory.count();
   const visibleVehicles = await prisma.vehicle.count({ where: { visible: true }});
   const rentedVehicles = await prisma.booking.count({ where: { status: 'Confirmed' }}); // Simplified logic
@@ -31,7 +30,7 @@ const AdminDashboard = async () => {
   const monthlyRevenue = await prisma.booking.aggregate({
     _sum: { totalPrice: true },
     where: { 
-      status: 'COMPLETED',
+      status: BOOKING_STATUS.CONFIRMED,
       createdAt: {
         gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
       }
