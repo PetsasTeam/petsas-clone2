@@ -21,7 +21,7 @@ const Footer: React.FC = () => {
         <div className="footer-container">
           <div className="footer-left">
             <div className="social-links">
-              <a href="https://www.facebook.com/petsascarrentals" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+              <a href="https://www.facebook.com/p/A-Petsas-Sons-Public-Ltd-Car-Rental-Leasing-100040409217181/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                 <FaFacebook />
               </a>
               <a href="https://www.instagram.com/petsasrentacar/" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
